@@ -1,0 +1,91 @@
+---
+title: "Task 1 - Data acquisition and cleaning"
+author: "Brett Taylor"
+date: "December 9, 2015"
+output: word_document
+---
+
+#Data Acquisition
+The data source is from the Coursera site.  https://d396qusza40orc.cloudfront.net/dsscapstone/dataset/Coursera-SwiftKey.zip  There is a set of files in multiple languages.    
+* Twitter
+* News
+* Blog Posts
+
+
+#Clean Data - Remove Profanities
+We need to ensure profanities are not allowed.   We utilized the Google What You Love data source captured by Jamie W. on GitHub to create a list of stop words.  The data source is here, and required some cleaning up since it did not meet JSON standards: https://gist.github.com/jamiew/1112488.   Note that this includes very profane words and should not be shared with people that will be offended.
+
+
+```{r}
+library(RJSONIO)
+curseStops  <- names(fromJSON("./data/google_twunter_lol.json"))
+curseCorp <- VCorpus(VectorSource(curseStops))
+print(sample(curseStops,100))
+```
+
+#Clean and Process Data
+We need to tokenize the text based data.  
+
+```{r}
+library(tm)
+source("runModel.R")
+  runModel({
+   fconn <-  file("./data/en_US.twitter.txt")
+   sourceData <- readLines(fconn)#,100000)
+   close(fconn)
+  
+    dataSource <- VectorSource(x = sourceData)
+    corpus <- VCorpus(dataSource)
+  },"Read twitter data source, and create corpus") 
+    skipWords <- function(x) removeWords(x, curseStops)
+    as.lower <- function(x) content_transformer(tolower)
+    list.of.functions <- list(stripWhitespace,
+  #                            skipWords,
+                              removePunctuation,
+                              content_transformer(tolower))
+    
+      runModel({
+    bcMap <- tm_map(corpus, FUN = tm_reduce, tmFuns = list.of.functions)
+      },"process twitter corpus - remove curse words, and transform to lower")
+        runModel({
+    docTerm <- DocumentTermMatrix(bcMap)
+    removeSparseTerms( docTerm,.75)
+        },"Create a document term matrix, and remove sparse terms above .75")
+    #badTweets <- DocumentTermMatrix(bcMap,list(dictionary=curseStops))
+    #    badTweets <- removeSparseTerms(badTweets,.8)
+  runModel({
+    termDoc  <- TermDocumentMatrix(bcMap)
+  },"Created a TermDocumentMatrix")
+  #  findAssocs(docTerm,"dog",0.3)
+  #  findAssocs(badTweets,"crap",0.1)
+
+```
+
+#The need for spell checking
+
+I think that when a user types in words into the window, they will need to have their word spell checked, and corrected to that predictions are accurate.  The corpus may have variation.
+ 
+```{r}
+    
+library("RWeka")
+library("tm")
+library(wordcloud)
+options(mc.cores=1)
+  
+TrigramTokenizer <- function(x) RWeka::NGramTokenizer(x, RWeka::Weka_control(min = 1, max = 3))
+tdm3 <- TermDocumentMatrix(bcMap, control = list(tokenize = TrigramTokenizer))
+#tdm3 <- removeSparseTerms(tdm3, 0.5)
+#plot(tdm3 )
+
+inspect(tdm3 )
+object.size(tdm3)
+termDoc  <- tdm3
+m <- as.matrix(termDoc)
+v <- sort(rowSums(m),decreasing = TRUE)
+d <- data.frame(word = names(v),freq=v)
+pal <- brewer.pal(6,"Dark2")
+pal <- pal[-(1)]
+
+wordcloud(d$word, d$freq,scale = c(4,0.4),colors =  pal)
+   
+```
