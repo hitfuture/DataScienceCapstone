@@ -16,8 +16,9 @@ The data source is from the Coursera site.  https://d396qusza40orc.cloudfront.ne
 We need to ensure profanities are not allowed.   We utilized the Google What You Love data source captured by Jamie W. on GitHub to create a list of stop words.  The data source is here, and required some cleaning up since it did not meet JSON standards: https://gist.github.com/jamiew/1112488.   Note that this includes very profane words and should not be shared with people that will be offended.
 
 
-```{r}
+```{r getBadWords}
 library(RJSONIO)
+library(tm)
 curseStops  <- names(fromJSON("./data/google_twunter_lol.json"))
 curseCorp <- VCorpus(VectorSource(curseStops))
 print(sample(curseStops,100))
@@ -26,11 +27,23 @@ print(sample(curseStops,100))
 #Clean and Process Data
 We need to tokenize the text based data.  
 
-```{r}
+```{r writeCorpusDataSets,cache=TRUE}
 library(tm)
+source("sampleData.R")
+
+writeCorpusDataSets("./data/en_US.blogs.txt")
+writeCorpusDataSets("./data/en_US.news.txt")
+writeCorpusDataSets("./data/en_US.twitter.txt")
+```
+
+```{r buildModel1}
 source("runModel.R")
+
+
   runModel({
-   fconn <-  file("./data/en_US.twitter.txt")
+#   fconn <-  file("./data/en_US.blogs.train.txt")
+   fconn <-  file("./data/en_US.blogs.valid.txt")
+
    sourceData <- readLines(fconn)#,100000)
    close(fconn)
   
@@ -40,8 +53,9 @@ source("runModel.R")
     skipWords <- function(x) removeWords(x, curseStops)
     as.lower <- function(x) content_transformer(tolower)
     list.of.functions <- list(stripWhitespace,
-  #                            skipWords,
+                             skipWords,
                               removePunctuation,
+                             removeNumbers,
                               content_transformer(tolower))
     
       runModel({
@@ -55,6 +69,7 @@ source("runModel.R")
     #    badTweets <- removeSparseTerms(badTweets,.8)
   runModel({
     termDoc  <- TermDocumentMatrix(bcMap)
+    termDoc2 <- removeSparseTerms(termDoc,.7)
   },"Created a TermDocumentMatrix")
   #  findAssocs(docTerm,"dog",0.3)
   #  findAssocs(badTweets,"crap",0.1)
@@ -72,15 +87,17 @@ library("tm")
 library(wordcloud)
 options(mc.cores=1)
   
-TrigramTokenizer <- function(x) RWeka::NGramTokenizer(x, RWeka::Weka_control(min = 1, max = 3))
+TrigramTokenizer <- function(x) RWeka::NGramTokenizer(x, RWeka::Weka_control(min = 3, max = 3))
 tdm3 <- TermDocumentMatrix(bcMap, control = list(tokenize = TrigramTokenizer))
-#tdm3 <- removeSparseTerms(tdm3, 0.5)
+tdm3.1 <- removeSparseTerms(tdm3, .2)
 #plot(tdm3 )
 
-inspect(tdm3 )
-object.size(tdm3)
-termDoc  <- tdm3
-m <- as.matrix(termDoc)
+inspect(tdm3.1)
+object.size(tdm3.1)
+m <- as.matrix((tdm3))
+m2 <- as.matrix(tdm3)
+dim(m2)
+
 v <- sort(rowSums(m),decreasing = TRUE)
 d <- data.frame(word = names(v),freq=v)
 pal <- brewer.pal(6,"Dark2")
