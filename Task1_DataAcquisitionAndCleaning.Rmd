@@ -191,13 +191,13 @@ tdMapsQuadgram2 <- removeSparseTerms(tdMapsQuadgram,.9999)
 frequencyQuadgramDF <- buildFrequencyDataSet(tdMapsQuadgram2)
 pal <- brewer.pal(6,"Dark2")
 pal <- pal[-(1)]
-wordcloud(frequencyUnigramDF$word, frequencyUnigramDF$freq,scale = c(8,.6),colors =  pal,max.words = 300)
+wordcloud(frequencyUnigramDF$word, frequencyUnigramDF$freq,scale = c(6,.6),colors =  pal,max.words = 300)
 
-wordcloud(frequencyBigramDF$word, frequencyBigramDF$freq,scale = c(5,0.4),colors =  pal,max.words = 75)
+wordcloud(frequencyBigramDF$word, frequencyBigramDF$freq,scale = c(5,0.4),colors =  pal,max.words = 70)
 
-wordcloud(frequencyTrigramDF$word, frequencyTrigramDF$freq,scale = c(3.5,0.2),colors =  pal,max.words = 50)
+wordcloud(frequencyTrigramDF$word, frequencyTrigramDF$freq,scale = c(3.5,0.2),colors =  pal,max.words = 45)
 
 
-wordcloud(frequencyQuadgramDF$word, frequencyQuadgramDF$freq,scale = c(3.3,0.2),colors =  pal,max.words = 35)
+wordcloud(frequencyQuadgramDF$word, frequencyQuadgramDF$freq,scale = c(3.3,0.2),colors =  pal,max.words = 32)
 
 ```
