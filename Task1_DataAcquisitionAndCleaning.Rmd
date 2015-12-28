@@ -16,12 +16,12 @@ The data source is from the Coursera site.  https://d396qusza40orc.cloudfront.ne
 We need to ensure profanities are not allowed.   We utilized the Google What You Love data source captured by Jamie W. on GitHub to create a list of stop words.  The data source is here, and required some cleaning up since it did not meet JSON standards: https://gist.github.com/jamiew/1112488.   Note that this includes very profane words and should not be shared with people that will be offended.
 
 
-```{r getBadWords}
+```{r getBadWords,warning=FALSE}
 library(RJSONIO)
 library(tm)
 curseStops  <- names(fromJSON("./data/google_twunter_lol.json"))
 curseCorp <- VCorpus(VectorSource(curseStops))
-print(sample(curseStops,100))
+#print(sample(curseStops,100))
 ```
 
 #Clean and Process Data
@@ -36,7 +36,7 @@ writeCorpusDataSets("./data/en_US.news.txt")
 writeCorpusDataSets("./data/en_US.twitter.txt")
 ```
 
-```{r buildModel1}
+```{r buildModel1,warning=FALSE}
 source("runModel.R")
 source("buildModel.R")
 
@@ -54,97 +54,150 @@ I think that when a user types in words into the window, they will need to have 
 
 #Blog
  
-```{r blogCloud}
+```{r blogCloud,warning=FALSE}
     
 library("RWeka")
 library(wordcloud)
+library(knitr)
 options(mc.cores=1)
 map <- blogsTermMap
 tdmap1  <- buildUnigramMap(map)
 tdmap2  <- buildBigramMap(map)
 tdmap3 <- buildTrigramMap(map)
+tdmap4 <- buildQuadgramMap(map)
 
-d1 <- buildFrequencyDataSet(tdmap1)
-d2 <- buildFrequencyDataSet(tdmap2)
-d3 <- buildFrequencyDataSet(tdmap3)
+
+blog.d1 <- buildFrequencyDataSet(tdmap1)
+blog.d2 <- buildFrequencyDataSet(tdmap2)
+blog.d3 <- buildFrequencyDataSet(tdmap3)
+blog.d4 <- buildFrequencyDataSet(tdmap4)
 
 
 #inspect(tdmap)
 #object.size(tdmap)
-head(d1)
+kable(head(blog.d1,20),caption = "Blog Unigram Frequency - Top 20")
 
-head(d2)
+kable(head(blog.d2,20),caption = "Blog Bigram Frequency - Top 20")
 
-head(d3)
+kable(head(blog.d3,20),caption = "Blog Trigram Frequency - Top 20")
+
+kable(head(blog.d4,20),caption = "Blog Quadgram Frequency - Top 20")
 
 pal <- brewer.pal(6,"Dark2")
 pal <- pal[-(1)]
-wordcloud(d1$word, d1$freq,scale = c(4,0.4),colors =  pal,max.words = 300)
+wordcloud(blog.d1$word, blog.d1$freq,scale = c(4,0.4),colors =  pal,max.words = 300)
 
-wordcloud(d2$word, d2$freq,scale = c(4,0.4),colors =  pal,max.words = 100)
+wordcloud(blog.d2$word, blog.d2$freq,scale = c(4,0.4),colors =  pal,max.words = 75)
 
-wordcloud(d3$word, d3$freq,scale = c(4,0.4),colors =  pal,max.words = 100)
+wordcloud(blog.d3$word, blog.d3$freq,scale = c(3.3,0.4),colors =  pal,max.words = 45)
+wordcloud(blog.d4$word, blog.d4$freq,scale = c(3.1,0.2),colors =  pal,max.words = 35)
 
 ```
 
 ##Twitter 
 
-```{r twitterCloud}
+```{r twitterCloud,warning=FALSE}
     
 map <- twitterTermMap
 tdmap1  <- buildUnigramMap(map)
 tdmap2  <- buildBigramMap(map)
 tdmap3 <- buildTrigramMap(map)
+tdmap4 <- buildQuadgramMap(map)
 
-d1 <- buildFrequencyDataSet(tdmap1)
-d2 <- buildFrequencyDataSet(tdmap2)
-d3 <- buildFrequencyDataSet(tdmap3)
+twitter.d1 <- buildFrequencyDataSet(tdmap1)
+twitter.d2 <- buildFrequencyDataSet(tdmap2)
+twitter.d3 <- buildFrequencyDataSet(tdmap3)
+twitter.d4 <- buildFrequencyDataSet(tdmap4)
 
 
 #inspect(tdmap)
 #object.size(tdmap)
-head(d1)
+kable(head(twitter.d1,20),caption = "Twitter Unigram Frequency - Top 20")
 
-head(d2)
+kable(head(twitter.d2,20),caption = "Twitter Bigram Frequency - Top 20")
 
-head(d3)
+kable(head(twitter.d3,20),caption = "Twitter Trigram Frequency - Top 20")
+
+kable(head(twitter.d4,20),caption = "Twitter Quadgram Frequency - Top 20")
 
 pal <- brewer.pal(6,"Dark2")
 pal <- pal[-(1)]
-wordcloud(d1$word, d1$freq,scale = c(4,0.4),colors =  pal,max.words = 300)
+wordcloud(twitter.d1$word, twitter.d1$freq,scale = c(4,0.4),colors =  pal,max.words = 300)
 
-wordcloud(d2$word, d2$freq,scale = c(4,0.4),colors =  pal,max.words = 100)
+wordcloud(twitter.d2$word, twitter.d2$freq,scale = c(4,0.4),colors =  pal,max.words = 100)
 
-wordcloud(d3$word, d3$freq,scale = c(4,0.4),colors =  pal,max.words = 100)
+wordcloud(twitter.d3$word, twitter.d3$freq,scale = c(3.5,0.4),colors =  pal,max.words = 50)
+
+wordcloud(twitter.d4$word, twitter.d4$freq,scale = c(3,0.2),colors =  pal,max.words = 35)
+
 ```
 
 ##News
 
-```{r newsCloud}
+```{r newsCloud,warning=FALSE}
 map <- newsTermMap
 tdmap1  <- buildUnigramMap(map)
 tdmap2  <- buildBigramMap(map)
 tdmap3 <- buildTrigramMap(map)
+tdmap4 <- buildQuadgramMap(map)
 
-d1 <- buildFrequencyDataSet(tdmap1)
-d2 <- buildFrequencyDataSet(tdmap2)
-d3 <- buildFrequencyDataSet(tdmap3)
-
+news.d1 <- buildFrequencyDataSet(tdmap1)
+news.d2 <- buildFrequencyDataSet(tdmap2)
+news.d3 <- buildFrequencyDataSet(tdmap3)
+news.d4 <- buildFrequencyDataSet(tdmap4)
+gc()
 
 #inspect(tdmap)
 #object.size(tdmap)
-head(d1)
+head(news.d1)
 
-head(d2)
+head(news.d2)
 
-head(d3)
+head(news.d3)
+
+head(news.d4)
 
 pal <- brewer.pal(6,"Dark2")
 pal <- pal[-(1)]
-wordcloud(d1$word, d1$freq,scale = c(4,0.4),colors =  pal,max.words = 300)
+wordcloud(news.d1$word, news.d1$freq,scale =  c(8,.6),colors =  pal,max.words = 300)
 
-wordcloud(d2$word, d2$freq,scale = c(4,0.4),colors =  pal,max.words = 100)
+wordcloud(news.d2$word, news.d2$freq,scale = c(5,0.4),colors =  pal,max.words = 100)
 
-wordcloud(d3$word, d3$freq,scale = c(4,0.4),colors =  pal,max.words = 100)
+wordcloud(news.d3$word, news.d3$freq,scale = c(3.8,0.3),colors =  pal,max.words = 50)
+
+wordcloud(news.d4$word, news.d4$freq,scale = c(3,0.2),colors =  pal,max.words = 35)
+
    
+```
+
+###Final Map
+```{r finalMaps, warning=FALSE}
+maps <- c(blogsTermMap,twitterTermMap,newsTermMap)
+tdMapsUnigram <- buildUnigramMap(maps)
+tdMapsUnigram2 <- removeSparseTerms(tdMapsUnigram,.9999)
+frequencyUnigramDF <- buildFrequencyDataSet(tdMapsUnigram2)
+
+tdMapsBigram <- buildBigramMap(maps)
+tdMapsBigram2 <- removeSparseTerms(tdMapsBigram,.9999)
+frequencyBigramDF <- buildFrequencyDataSet(tdMapsBigram2)
+
+tdMapsTrigram <- buildTrigramMap(maps)
+tdMapsTrigram2 <- removeSparseTerms(tdMapsTrigram,.9999)
+frequencyTrigramDF <- buildFrequencyDataSet(tdMapsTrigram2)
+
+
+tdMapsQuadgram <- buildQuadgramMap(maps)
+tdMapsQuadgram2 <- removeSparseTerms(tdMapsQuadgram,.9999)
+frequencyQuadgramDF <- buildFrequencyDataSet(tdMapsQuadgram2)
+pal <- brewer.pal(6,"Dark2")
+pal <- pal[-(1)]
+wordcloud(frequencyUnigramDF$word, frequencyUnigramDF$freq,scale = c(8,.6),colors =  pal,max.words = 300)
+
+wordcloud(frequencyBigramDF$word, frequencyBigramDF$freq,scale = c(5,0.4),colors =  pal,max.words = 75)
+
+wordcloud(frequencyTrigramDF$word, frequencyTrigramDF$freq,scale = c(3.5,0.2),colors =  pal,max.words = 50)
+
+
+wordcloud(frequencyQuadgramDF$word, frequencyQuadgramDF$freq,scale = c(3.3,0.2),colors =  pal,max.words = 35)
+
 ```

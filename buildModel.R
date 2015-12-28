@@ -36,6 +36,7 @@ buildUnigramMap <- function(termMap) {
         tdmap <-
                 TermDocumentMatrix(termMap, control = list(tokenize = TrigramTokenizer))
         tdmap
+        
 }
 
 buildBigramMap <- function(termMap) {
@@ -44,6 +45,7 @@ buildBigramMap <- function(termMap) {
                         RWeka::NGramTokenizer(x, RWeka::Weka_control(min = 2, max = 2))
         tdmap <-
                 TermDocumentMatrix(termMap, control = list(tokenize = TrigramTokenizer))
+        
         tdmap
 }
 
@@ -56,10 +58,30 @@ buildTrigramMap <- function(termMap) {
         tdmap
 }
 
+buildQuadgramMap <- function(termMap) {
+        QuadgramTokenizer <-
+                function(x)
+                        RWeka::NGramTokenizer(x, RWeka::Weka_control(min = 4, max = 4))
+        tdmap <-
+                TermDocumentMatrix(termMap, control = list(tokenize = QuadgramTokenizer))
+        tdmap
+}
 
 buildFrequencyDataSet <- function(tdmap) {
         m <- as.matrix((tdmap))
         v <- sort(rowSums(m),decreasing = TRUE)
-        d <- data.frame(word = names(v),freq = v)
+        d <- data.frame(word = (names(v)),freq = v)
+        grams <-
+                sapply(as.character(d$word), function(x) { 
+                        rev(strsplit(x,split = " ",fixed = TRUE))})
+        wordCount  <- length(grams[[1]])
+       
+                columnNames <- paste("w-",(wordCount:1)-1,sep = "")
+                for (i in 1:wordCount) {
+                        vector <- sapply(grams , function(x)
+                                x[i])
+                        d[,(columnNames[i])] <- vector
+                
+        }
         d
 }
