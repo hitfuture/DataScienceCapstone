@@ -1,0 +1,114 @@
+---
+title: "Sentiment Analysis  - Customer Experience"
+author: "Brett Taylor"
+date: "December 9, 2015"
+output: html_document
+--- 
+
+#Data 
+Where data came from: St. Luke's Integrated Health Technology organization performed a customer experience survey during August of 2015.  Survey included 10 questions and 2 of them allowed survey participants to provide textual feedback to the questions.  
+
+##Question 9
+
+answered question: 677	  
+skipped question: 417   
+
+*What "one thing" could IHT Services do to make your work more efficient?	9. What "one thing" could IHT Services do to make your work more efficient?*
+
+##Question 11
+
+answered question:	453   
+skipped question:	702   
+
+*Do you have any additional comments or feedback you would like to give IHT?	11. Do you have any additional comments or feedback you would like to give IHT?	11. Do you have any additional comments or feedback you would like to give IHT?*
+
+
+
+#Clean Data - Remove Profanities
+We need to ensure profanities are not allowed.   We utilized the Google What You Love data source captured by Jamie W. on GitHub to create a list of stop words.  The data source is here, and required some cleaning up since it did not meet JSON standards: https://gist.github.com/jamiew/1112488.   Note that this includes very profane words and should not be shared with people that will be offended.
+
+
+```{r}
+library(RJSONIO)
+curseStops  <- names(fromJSON("./data/google_twunter_lol.json"))
+#print(sample(curseStops,100))
+```
+
+#Clean and Process Data
+We need to tokenize the text based data.  
+
+```{r,fig.height=20,fig.width=20 }
+library(tm)
+library(xlsx)
+library(wordcloud)
+   course9 <- read.xlsx("./data/SurveySummary_09112015.xlsx",sheetIndex = 2,startRow = 7,header = FALSE)
+    
+   
+    dataSource <- VectorSource(x = course9$X2)
+    corpus <- VCorpus(dataSource)
+    skipWords <- function(x) removeWords(x, stopwords())
+    as.lower <- function(x) content_transformer(tolower)
+    list.of.functions <- list(stripWhitespace,
+                              skipWords,
+                              removePunctuation,
+                              content_transformer(tolower))
+    bcMap <- tm_map(corpus, FUN = tm_reduce, tmFuns = list.of.functions)
+    
+    docTerm <- DocumentTermMatrix(bcMap)
+    removeSparseTerms( docTerm,.8)
+    badTweets <- DocumentTermMatrix(bcMap,list(dictionary=curseStops))
+        badTweets <- removeSparseTerms(badTweets,.8)
+
+    termDoc  <- TermDocumentMatrix(bcMap)
+    m <- as.matrix(termDoc)
+    v <- sort(rowSums(m),decreasing = TRUE)
+   d <- data.frame(word = names(v),freq=v)
+ pal <- brewer.pal(6,"Dark2")
+		pal <- pal[-(1)]
+ 
+     wordcloud(d$word, d$freq,scale = c(4,0.4),colors =  pal)
+               #, scale=c(4,0.5),  c(8,.5),2,,FALSE,.1)
+
+    
+```
+
+#The need for spell checking
+
+[Blog on Spell Checking](http://r-bloggers.com/a-spell-checker-in-r)
+
+[paper on R Spell checking](https://journal.r-project.org/archive/2011-2/RJournal_2011-2_Hornik+Murdoch.pdf)
+
+```{r,fig.height=20,fig.width=20}
+library(tm)
+library(xlsx)
+library(wordcloud)
+   course10 <- read.xlsx("./data/SurveySummary_09112015.xlsx",sheetIndex = 3,startRow = 7,header = FALSE)
+    
+   
+    dataSource <- VectorSource(x = course10$X2)
+    corpus <- VCorpus(dataSource)
+    skipWords <- function(x) removeWords(x, stopwords())
+    as.lower <- function(x) content_transformer(tolower)
+    list.of.functions <- list(stripWhitespace,
+                              skipWords,
+                              removePunctuation,
+                              content_transformer(tolower))
+    bcMap <- tm_map(corpus, FUN = tm_reduce, tmFuns = list.of.functions)
+    
+    docTerm <- DocumentTermMatrix(bcMap)
+    removeSparseTerms( docTerm,.8)
+    badTweets <- DocumentTermMatrix(bcMap,list(dictionary=curseStops))
+        badTweets <- removeSparseTerms(badTweets,.8)
+
+    termDoc  <- TermDocumentMatrix(bcMap)
+    m <- as.matrix(termDoc)
+    v <- sort(rowSums(m),decreasing = TRUE)
+   d <- data.frame(word = names(v),freq=v)
+ pal <- brewer.pal(6,"PuBuGn")
+		pal <- pal[-(1)]
+ 
+     wordcloud(d$word, d$freq,scale = c(4,0.4),colors =  pal)
+               #, scale=c(4,0.5),  c(8,.5),2,,FALSE,.1)
+
+    
+```

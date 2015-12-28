@@ -38,71 +38,113 @@ writeCorpusDataSets("./data/en_US.twitter.txt")
 
 ```{r buildModel1}
 source("runModel.R")
+source("buildModel.R")
 
 
-  runModel({
-#   fconn <-  file("./data/en_US.blogs.train.txt")
-   fconn <-  file("./data/en_US.blogs.valid.txt")
+blogsTermMap <- buildTermMap("./data/en_US.blogs.valid.txt")
+twitterTermMap<- buildTermMap("./data/en_US.twitter.valid.txt")
+newsTermMap<- buildTermMap("./data/en_US.news.valid.txt")
 
-   sourceData <- readLines(fconn)#,100000)
-   close(fconn)
-  
-    dataSource <- VectorSource(x = sourceData)
-    corpus <- VCorpus(dataSource)
-  },"Read twitter data source, and create corpus") 
-    skipWords <- function(x) removeWords(x, curseStops)
-    as.lower <- function(x) content_transformer(tolower)
-    list.of.functions <- list(stripWhitespace,
-                             skipWords,
-                              removePunctuation,
-                             removeNumbers,
-                              content_transformer(tolower))
-    
-      runModel({
-    bcMap <- tm_map(corpus, FUN = tm_reduce, tmFuns = list.of.functions)
-      },"process twitter corpus - remove curse words, and transform to lower")
-        runModel({
-    docTerm <- DocumentTermMatrix(bcMap)
-    removeSparseTerms( docTerm,.75)
-        },"Create a document term matrix, and remove sparse terms above .75")
-    #badTweets <- DocumentTermMatrix(bcMap,list(dictionary=curseStops))
-    #    badTweets <- removeSparseTerms(badTweets,.8)
-  runModel({
-    termDoc  <- TermDocumentMatrix(bcMap)
-    termDoc2 <- removeSparseTerms(termDoc,.7)
-  },"Created a TermDocumentMatrix")
-  #  findAssocs(docTerm,"dog",0.3)
-  #  findAssocs(badTweets,"crap",0.1)
 
 ```
 
 #The need for spell checking
 
 I think that when a user types in words into the window, they will need to have their word spell checked, and corrected to that predictions are accurate.  The corpus may have variation.
+
+#Blog
  
-```{r}
+```{r blogCloud}
     
 library("RWeka")
-library("tm")
 library(wordcloud)
 options(mc.cores=1)
-  
-TrigramTokenizer <- function(x) RWeka::NGramTokenizer(x, RWeka::Weka_control(min = 3, max = 3))
-tdm3 <- TermDocumentMatrix(bcMap, control = list(tokenize = TrigramTokenizer))
-tdm3.1 <- removeSparseTerms(tdm3, .2)
-#plot(tdm3 )
+map <- blogsTermMap
+tdmap1  <- buildUnigramMap(map)
+tdmap2  <- buildBigramMap(map)
+tdmap3 <- buildTrigramMap(map)
 
-inspect(tdm3.1)
-object.size(tdm3.1)
-m <- as.matrix((tdm3))
-m2 <- as.matrix(tdm3)
-dim(m2)
+d1 <- buildFrequencyDataSet(tdmap1)
+d2 <- buildFrequencyDataSet(tdmap2)
+d3 <- buildFrequencyDataSet(tdmap3)
 
-v <- sort(rowSums(m),decreasing = TRUE)
-d <- data.frame(word = names(v),freq=v)
+
+#inspect(tdmap)
+#object.size(tdmap)
+head(d1)
+
+head(d2)
+
+head(d3)
+
 pal <- brewer.pal(6,"Dark2")
 pal <- pal[-(1)]
+wordcloud(d1$word, d1$freq,scale = c(4,0.4),colors =  pal,max.words = 300)
 
-wordcloud(d$word, d$freq,scale = c(4,0.4),colors =  pal)
+wordcloud(d2$word, d2$freq,scale = c(4,0.4),colors =  pal,max.words = 100)
+
+wordcloud(d3$word, d3$freq,scale = c(4,0.4),colors =  pal,max.words = 100)
+
+```
+
+##Twitter 
+
+```{r twitterCloud}
+    
+map <- twitterTermMap
+tdmap1  <- buildUnigramMap(map)
+tdmap2  <- buildBigramMap(map)
+tdmap3 <- buildTrigramMap(map)
+
+d1 <- buildFrequencyDataSet(tdmap1)
+d2 <- buildFrequencyDataSet(tdmap2)
+d3 <- buildFrequencyDataSet(tdmap3)
+
+
+#inspect(tdmap)
+#object.size(tdmap)
+head(d1)
+
+head(d2)
+
+head(d3)
+
+pal <- brewer.pal(6,"Dark2")
+pal <- pal[-(1)]
+wordcloud(d1$word, d1$freq,scale = c(4,0.4),colors =  pal,max.words = 300)
+
+wordcloud(d2$word, d2$freq,scale = c(4,0.4),colors =  pal,max.words = 100)
+
+wordcloud(d3$word, d3$freq,scale = c(4,0.4),colors =  pal,max.words = 100)
+```
+
+##News
+
+```{r newsCloud}
+map <- newsTermMap
+tdmap1  <- buildUnigramMap(map)
+tdmap2  <- buildBigramMap(map)
+tdmap3 <- buildTrigramMap(map)
+
+d1 <- buildFrequencyDataSet(tdmap1)
+d2 <- buildFrequencyDataSet(tdmap2)
+d3 <- buildFrequencyDataSet(tdmap3)
+
+
+#inspect(tdmap)
+#object.size(tdmap)
+head(d1)
+
+head(d2)
+
+head(d3)
+
+pal <- brewer.pal(6,"Dark2")
+pal <- pal[-(1)]
+wordcloud(d1$word, d1$freq,scale = c(4,0.4),colors =  pal,max.words = 300)
+
+wordcloud(d2$word, d2$freq,scale = c(4,0.4),colors =  pal,max.words = 100)
+
+wordcloud(d3$word, d3$freq,scale = c(4,0.4),colors =  pal,max.words = 100)
    
 ```
