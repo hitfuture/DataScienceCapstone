@@ -109,16 +109,7 @@ buildFrequencyDataSet <- function(tdmap) {
 
 #Assign Probability
 freqOfWord <- function(wrds , unigram ) {
-     index <- 0
-     freqs <- sapply(wrds, function(wrd) {
-             index <-- index + 1
-           if(index %% 100 == 0) {message(sprintf("Now at %f row",index))}  
-        rec <- unigram[which(frequencyUnigramDF$word == wrd),c("freq")]
-         rec}
-        )
-   #  expect_equal(length(wrds),length(freqs))
-     freqs <- as.integer(sapply(freqs,function(x){x}))
-        return((freqs))
+        unigram[wrds,]$freq
 }
 
 #Compute the probability of the second to the last word in an Ngram
