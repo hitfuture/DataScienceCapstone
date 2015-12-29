@@ -73,8 +73,8 @@ blog.d3 <- buildFrequencyDataSet(tdmap3)
 blog.d4 <- buildFrequencyDataSet(tdmap4)
 
 
-#inspect(tdmap)
-#object.size(tdmap)
+#inspect(tdmap1[,1])
+#object.size(tdmap4[,1])
 kable(head(blog.d1,20),caption = "Blog Unigram Frequency - Top 20")
 
 kable(head(blog.d2,20),caption = "Blog Bigram Frequency - Top 20")
@@ -149,13 +149,13 @@ gc()
 
 #inspect(tdmap)
 #object.size(tdmap)
-head(news.d1)
+kable(head(news.d1,20),caption = "Twitter Unigram Frequency - Top 20")
 
-head(news.d2)
+kable(head(news.d2,20),caption = "Twitter Bigram Frequency - Top 20")
 
-head(news.d3)
+kable(head(news.d3,20),caption = "Twitter Trigram Frequency - Top 20")
 
-head(news.d4)
+kable(head(news.d4,20),caption = "Twitter Quadgram Frequency - Top 20")
 
 pal <- brewer.pal(6,"Dark2")
 pal <- pal[-(1)]
@@ -174,21 +174,26 @@ wordcloud(news.d4$word, news.d4$freq,scale = c(3,0.2),colors =  pal,max.words = 
 ```{r finalMaps, warning=FALSE}
 maps <- c(blogsTermMap,twitterTermMap,newsTermMap)
 tdMapsUnigram <- buildUnigramMap(maps)
-tdMapsUnigram2 <- removeSparseTerms(tdMapsUnigram,.9999)
-frequencyUnigramDF <- buildFrequencyDataSet(tdMapsUnigram2)
+#tdMapsUnigram2 <- removeSparseTerms(tdMapsUnigram,.9999)
+frequencyUnigramDF <- buildFrequencyDataSet(tdMapsUnigram)
+ frequencyUnigramDF <- frequencyUnigramDF%>%group_by(word,w_0)%>%summarize(freq)%>%ungroup()
 
 tdMapsBigram <- buildBigramMap(maps)
 tdMapsBigram2 <- removeSparseTerms(tdMapsBigram,.9999)
 frequencyBigramDF <- buildFrequencyDataSet(tdMapsBigram2)
+frequencyBigramDF <- computeProbability(frequencyBigramDF, frequencyUnigramDF)
+
 
 tdMapsTrigram <- buildTrigramMap(maps)
 tdMapsTrigram2 <- removeSparseTerms(tdMapsTrigram,.9999)
 frequencyTrigramDF <- buildFrequencyDataSet(tdMapsTrigram2)
-
+frequencyTrigramDF <- computeProbability(frequencyTrigramDF, frequencyUnigramDF)
 
 tdMapsQuadgram <- buildQuadgramMap(maps)
 tdMapsQuadgram2 <- removeSparseTerms(tdMapsQuadgram,.9999)
 frequencyQuadgramDF <- buildFrequencyDataSet(tdMapsQuadgram2)
+frequencyQuadgramDF <- computeProbability(frequencyQuadgramDF, frequencyUnigramDF)
+
 pal <- brewer.pal(6,"Dark2")
 pal <- pal[-(1)]
 wordcloud(frequencyUnigramDF$word, frequencyUnigramDF$freq,scale = c(6,.6),colors =  pal,max.words = 300)
@@ -200,4 +205,33 @@ wordcloud(frequencyTrigramDF$word, frequencyTrigramDF$freq,scale = c(3.5,0.2),co
 
 wordcloud(frequencyQuadgramDF$word, frequencyQuadgramDF$freq,scale = c(3.3,0.2),colors =  pal,max.words = 32)
 
+kable(head(frequencyUnigramDF,20),caption = "All Unigram Frequency - Top 20")
+
+kable(head(frequencyBigramDF,20),caption = "All Bigram Frequency - Top 20")
+
+kable(head(frequencyTrigramDF,20),caption = "All Trigram Frequency - Top 20")
+
+kable(head(frequencyQuadgramDF,20),caption = "All Quadgram Frequency - Top 20")
+ 
+
+        
+
 ```
+
+#Intrinsic Evaluation - Perplexity
+
+
+Predicting the next word.  
+###Create our Test Set
+
+```{r createTestSet}
+blogsTestMap <- buildTermMap("./data/en_US.blogs.test.txt")
+twitterTestMap<- buildTermMap("./data/en_US.twitter.test.txt")
+newsTestMap<- buildTermMap("./data/en_US.news.test.txt")
+fullTestMap <- c(blogsTestMap,twitterTestMap,newsTestMap)
+```
+
+##Dealing with Zeros
+
+
+

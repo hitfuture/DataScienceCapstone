@@ -1,3 +1,9 @@
+library(tm)
+library(dplyr)
+library(RWeka)
+library(slam)
+library(testthat)
+
 buildTermMap <- function(fileName) {
         runModel({
                 #   fconn <-  file("./data/en_US.blogs.train.txt")
@@ -14,13 +20,14 @@ buildTermMap <- function(fileName) {
         as.lower <- function(x)
                 content_transformer(tolower)
         list.of.functions <- list(
-                stripWhitespace,
-                skipWords,
-                removePunctuation,
-                removeNumbers,
-                content_transformer(tolower)
+             stripWhitespace,
+            skipWords,
+              removePunctuation,
+               removeNumbers ,
+               content_transformer(tolower) 
+            
         )
-        
+          
         runModel({
                 bcMap <- tm_map(corpus, FUN = tm_reduce, tmFuns = list.of.functions)
         },"process  corpus - remove curse words, and transform to lower")
@@ -30,23 +37,24 @@ buildTermMap <- function(fileName) {
 
 
 buildUnigramMap <- function(termMap) {
-        TrigramTokenizer <-
+        UnigramTokenizer <-
                 function(x)
                         RWeka::NGramTokenizer(x, RWeka::Weka_control(min = 1, max = 1))
         tdmap <-
-                TermDocumentMatrix(termMap, control = list(tokenize = TrigramTokenizer))
-        tdmap
+                TermDocumentMatrix(termMap, control = list(tokenize = UnigramTokenizer, wordLengths=c(1,Inf)))
+                 
+        row_sums(tdmap,na.rm=TRUE)
         
 }
 
 buildBigramMap <- function(termMap) {
-        TrigramTokenizer <-
+        BigramTokenizer <-
                 function(x)
                         RWeka::NGramTokenizer(x, RWeka::Weka_control(min = 2, max = 2))
         tdmap <-
-                TermDocumentMatrix(termMap, control = list(tokenize = TrigramTokenizer))
+                TermDocumentMatrix(termMap, control = list(tokenize = BigramTokenizer))
         
-        tdmap
+        row_sums(tdmap,na.rm=TRUE)
 }
 
 buildTrigramMap <- function(termMap) {
@@ -55,7 +63,8 @@ buildTrigramMap <- function(termMap) {
                         RWeka::NGramTokenizer(x, RWeka::Weka_control(min = 3, max = 3))
         tdmap <-
                 TermDocumentMatrix(termMap, control = list(tokenize = TrigramTokenizer))
-        tdmap
+        row_sums(tdmap,na.rm=TRUE)
+        
 }
 
 buildQuadgramMap <- function(termMap) {
@@ -64,7 +73,7 @@ buildQuadgramMap <- function(termMap) {
                         RWeka::NGramTokenizer(x, RWeka::Weka_control(min = 4, max = 4))
         tdmap <-
                 TermDocumentMatrix(termMap, control = list(tokenize = QuadgramTokenizer))
-        tdmap
+        row_sums(tdmap,na.rm=TRUE)
 }
 
 buildFrequencyDataSet <- function(tdmap) {
@@ -76,12 +85,40 @@ buildFrequencyDataSet <- function(tdmap) {
                         rev(strsplit(x,split = " ",fixed = TRUE))})
         wordCount  <- length(grams[[1]])
        
-                columnNames <- paste("w-",(wordCount:1)-1,sep = "")
+                columnNames <- paste("w_",(wordCount:1)-1,sep = "")
                 for (i in 1:wordCount) {
                         vector <- sapply(grams , function(x)
                                 x[i])
                         d[,(columnNames[i])] <- vector
                 
-        }
+                }
+                 
         d
+}
+
+#Assign Probability
+freqOfWord <- function(wrds , unigram ) {
+     index <- 0
+     freqs <- sapply(wrds, function(wrd) {
+             index <-- index + 1
+           if(index %% 100 == 0) {message(sprintf("Now at %f row",index))}  
+        rec <- unigram[which(frequencyUnigramDF$word == wrd),c("freq")]
+         rec}
+        )
+   #  expect_equal(length(wrds),length(freqs))
+     freqs <- as.integer(sapply(freqs,function(x){x}))
+        return((freqs))
+}
+
+#Compute the probability of the second to the last word in an Ngram
+computeProbability <- function (ngram, unigram) {
+        uni <-  freqOfWord((ngram$w_1),unigram)
+        ngram$freq.w_1 <- uni
+        ngram %>%mutate(prob = freq / freq.w_1)
+}
+
+
+assignProbability <- function(data, uni) {
+#         lapply(data$)
+#         data <- data%>%mutate(prob =  )
 }
