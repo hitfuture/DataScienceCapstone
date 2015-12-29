@@ -40,9 +40,13 @@ buildUnigramMap <- function(termMap) {
         UnigramTokenizer <-
                 function(x)
                         RWeka::NGramTokenizer(x, RWeka::Weka_control(min = 1, max = 1))
+        message("building term document matrix")
         tdmap <-
                 TermDocumentMatrix(termMap, control = list(tokenize = UnigramTokenizer, wordLengths=c(1,Inf)))
-        rollup(tdmap,2,na.rm=TRUE,FUN = sum)           
+        message("rolling up")
+        tdmap <- rollup(tdmap,2,na.rm=TRUE,FUN = sum) 
+        message("rollup complete")
+        return(tdmap)
        # row_sums(tdmap,na.rm=TRUE)
         
 }
@@ -54,8 +58,10 @@ buildBigramMap <- function(termMap) {
         tdmap <-
                 TermDocumentMatrix(termMap, control = list(tokenize = BigramTokenizer))
         
-        row_sums(tdmap,na.rm=TRUE)
-}
+        message("rolling up")
+        tdmap <- rollup(tdmap,2,na.rm=TRUE,FUN = sum) 
+        message("rollup complete")
+        return(tdmap)}
 
 buildTrigramMap <- function(termMap) {
         TrigramTokenizer <-
@@ -63,7 +69,10 @@ buildTrigramMap <- function(termMap) {
                         RWeka::NGramTokenizer(x, RWeka::Weka_control(min = 3, max = 3))
         tdmap <-
                 TermDocumentMatrix(termMap, control = list(tokenize = TrigramTokenizer))
-        row_sums(tdmap,na.rm=TRUE)
+        message("rolling up")
+        tdmap <- rollup(tdmap,2,na.rm=TRUE,FUN = sum) 
+        message("rollup complete")
+        return(tdmap)
         
 }
 
@@ -73,8 +82,10 @@ buildQuadgramMap <- function(termMap) {
                         RWeka::NGramTokenizer(x, RWeka::Weka_control(min = 4, max = 4))
         tdmap <-
                 TermDocumentMatrix(termMap, control = list(tokenize = QuadgramTokenizer))
-        row_sums(tdmap,na.rm=TRUE)
-}
+        message("rolling up")
+        tdmap <- rollup(tdmap,2,na.rm=TRUE,FUN = sum) 
+        message("rollup complete")
+        return(tdmap)}
 
 buildFrequencyDataSet <- function(tdmap) {
         m <- as.matrix((tdmap))
