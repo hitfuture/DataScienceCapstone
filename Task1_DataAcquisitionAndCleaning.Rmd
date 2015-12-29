@@ -41,9 +41,9 @@ source("runModel.R")
 source("buildModel.R")
 
 
-blogsTermMap <- buildTermMap("./data/en_US.blogs.valid.txt")
-twitterTermMap<- buildTermMap("./data/en_US.twitter.valid.txt")
-newsTermMap<- buildTermMap("./data/en_US.news.valid.txt")
+blogsTermMap <- buildTermMap("./data/en_US.blogs.train.txt")
+twitterTermMap<- buildTermMap("./data/en_US.twitter.train.txt")
+newsTermMap<- buildTermMap("./data/en_US.news.train.txt")
 
 
 ```
@@ -54,7 +54,7 @@ I think that when a user types in words into the window, they will need to have 
 
 #Blog
  
-```{r blogCloud,warning=FALSE}
+```{r blogCloud,warning=FALSE,eval=FALSE}
     
 library("RWeka")
 library(wordcloud)
@@ -96,7 +96,7 @@ wordcloud(blog.d4$word, blog.d4$freq,scale = c(3.1,0.2),colors =  pal,max.words 
 
 ##Twitter 
 
-```{r twitterCloud,warning=FALSE}
+```{r twitterCloud,warning=FALSE,eval=FALSE}
     
 map <- twitterTermMap
 tdmap1  <- buildUnigramMap(map)
@@ -134,7 +134,7 @@ wordcloud(twitter.d4$word, twitter.d4$freq,scale = c(3,0.2),colors =  pal,max.wo
 
 ##News
 
-```{r newsCloud,warning=FALSE}
+```{r newsCloud,warning=FALSE,eval=FALSE}
 map <- newsTermMap
 tdmap1  <- buildUnigramMap(map)
 tdmap2  <- buildBigramMap(map)
@@ -172,27 +172,32 @@ wordcloud(news.d4$word, news.d4$freq,scale = c(3,0.2),colors =  pal,max.words = 
 
 ###Final Map
 ```{r finalMaps, warning=FALSE}
+library(slam)
 maps <- c(blogsTermMap,twitterTermMap,newsTermMap)
 tdMapsUnigram <- buildUnigramMap(maps)
-#tdMapsUnigram2 <- removeSparseTerms(tdMapsUnigram,.9999)
+#tdMapsUnigram2 <- removeSparseTerms(tdMapsUnigram,.999)
+tdMapsUnigram <- rollup(tdMapsUnigram,2,na.rm=TRUE,FUN = sum)
 frequencyUnigramDF <- buildFrequencyDataSet(tdMapsUnigram)
  frequencyUnigramDF <- frequencyUnigramDF%>%group_by(word,w_0)%>%summarize(freq)%>%ungroup()
 
 tdMapsBigram <- buildBigramMap(maps)
-tdMapsBigram2 <- removeSparseTerms(tdMapsBigram,.9999)
-frequencyBigramDF <- buildFrequencyDataSet(tdMapsBigram2)
+tdMapsBigram <- rollup(tdMapsBigram,2,na.r=TRUE,FUN=sum)
+tdMapsBigram2 <- removeSparseTerms(tdMapsBigram,.99999)
+frequencyBigramDF <- buildFrequencyDataSet(tdMapsBigram)
 frequencyBigramDF <- computeProbability(frequencyBigramDF, frequencyUnigramDF)
 
 
 tdMapsTrigram <- buildTrigramMap(maps)
-tdMapsTrigram2 <- removeSparseTerms(tdMapsTrigram,.9999)
+tdMapsTrigram2 <- removeSparseTerms(tdMapsTrigram,.99999)
 frequencyTrigramDF <- buildFrequencyDataSet(tdMapsTrigram2)
 frequencyTrigramDF <- computeProbability(frequencyTrigramDF, frequencyUnigramDF)
 
 tdMapsQuadgram <- buildQuadgramMap(maps)
-tdMapsQuadgram2 <- removeSparseTerms(tdMapsQuadgram,.9999)
+tdMapsQuadgram2 <- removeSparseTerms(tdMapsQuadgram,.99999)
 frequencyQuadgramDF <- buildFrequencyDataSet(tdMapsQuadgram2)
+
 frequencyQuadgramDF <- computeProbability(frequencyQuadgramDF, frequencyUnigramDF)
+
 
 pal <- brewer.pal(6,"Dark2")
 pal <- pal[-(1)]
@@ -206,13 +211,15 @@ wordcloud(frequencyTrigramDF$word, frequencyTrigramDF$freq,scale = c(3.5,0.2),co
 wordcloud(frequencyQuadgramDF$word, frequencyQuadgramDF$freq,scale = c(3.3,0.2),colors =  pal,max.words = 32)
 
 kable(head(frequencyUnigramDF,20),caption = "All Unigram Frequency - Top 20")
+summary(frequencyUnigramDF)
 
 kable(head(frequencyBigramDF,20),caption = "All Bigram Frequency - Top 20")
+summary(frequencyBigramDF)
 
 kable(head(frequencyTrigramDF,20),caption = "All Trigram Frequency - Top 20")
-
+summary(frequencyTrigramDF)
 kable(head(frequencyQuadgramDF,20),caption = "All Quadgram Frequency - Top 20")
- 
+summary(frequencyQuadgramDF)
 
         
 
