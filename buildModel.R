@@ -42,8 +42,8 @@ buildUnigramMap <- function(termMap) {
                         RWeka::NGramTokenizer(x, RWeka::Weka_control(min = 1, max = 1))
         tdmap <-
                 TermDocumentMatrix(termMap, control = list(tokenize = UnigramTokenizer, wordLengths=c(1,Inf)))
-                 
-        row_sums(tdmap,na.rm=TRUE)
+        rollup(tdmap,2,na.rm=TRUE,FUN = sum)           
+       # row_sums(tdmap,na.rm=TRUE)
         
 }
 
