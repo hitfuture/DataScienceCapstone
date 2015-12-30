@@ -34,7 +34,8 @@ buildTermMap <- function(fileName) {
         return(bcMap)
 }
 
-
+#Information on how to optimize matrix build using slam
+#http://stackoverflow.com/questions/21921422/row-sum-for-large-term-document-matrix-simple-triplet-matrix-tm-package
 
 buildUnigramMap <- function(termMap) {
         UnigramTokenizer <-

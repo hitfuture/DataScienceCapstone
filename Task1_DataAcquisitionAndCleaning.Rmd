@@ -19,6 +19,8 @@ We need to ensure profanities are not allowed.   We utilized the Google What You
 ```{r getBadWords,warning=FALSE}
 library(RJSONIO)
 library(tm)
+Sys.setenv(NOAWT=TRUE)
+
 curseStops  <- names(fromJSON("./data/google_twunter_lol.json"))
 curseCorp <- VCorpus(VectorSource(curseStops))
 #print(sample(curseStops,100))
@@ -173,35 +175,58 @@ wordcloud(news.d4$word, news.d4$freq,scale = c(3,0.2),colors =  pal,max.words = 
 ###Final Map
 ```{r finalMaps, warning=FALSE}
 library(slam)
+options(mc.cores=1)
+
 maps <- c(blogsTermMap,twitterTermMap,newsTermMap)
 tdMapsUnigram <- buildUnigramMap(maps)
 #tdMapsUnigram2 <- removeSparseTerms(tdMapsUnigram,.999)
-tdMapsUnigram <- rollup(tdMapsUnigram,2,na.rm=TRUE,FUN = sum)
+#tdMapsUnigram <- rollup(tdMapsUnigram,2,na.rm=TRUE,FUN = sum)
 frequencyUnigramDF <- buildFrequencyDataSet(tdMapsUnigram)
 #frequencyUnigramDF <- frequencyUnigramDF%>%group_by(word,w_0)%>%summarize(freq)%>%ungroup()
+write.csv(frequencyUnigramDF, "./data/freq_unigram.csv")
 
 tdMapsBigram <- buildBigramMap(maps)
 #tdMapsBigram <- rollup(tdMapsBigram,2,na.r=TRUE,FUN=sum)
-tdMapsBigram2 <- removeSparseTerms(tdMapsBigram,.99999)
+tdMapsBigram <- removeSparseTerms(tdMapsBigram,.9999)
 frequencyBigramDF <- buildFrequencyDataSet(tdMapsBigram)
 frequencyBigramDF <- computeProbability(frequencyBigramDF, frequencyUnigramDF)
+write.csv(frequencyBigramDF, "./data/freq_bigram.csv")
 
 
 tdMapsTrigram <- buildTrigramMap(maps)
-tdMapsTrigram2 <- removeSparseTerms(tdMapsTrigram,.99999)
-frequencyTrigramDF <- buildFrequencyDataSet(tdMapsTrigram2)
+tdMapsTrigram <- removeSparseTerms(tdMapsTrigram,.9999)
+frequencyTrigramDF <- buildFrequencyDataSet(tdMapsTrigram)
 frequencyTrigramDF <- computeProbability(frequencyTrigramDF, frequencyUnigramDF)
+write.csv(frequencyTrigramDF, "./data/freq_trigram.csv")
 
 tdMapsQuadgram <- buildQuadgramMap(maps)
-tdMapsQuadgram2 <- removeSparseTerms(tdMapsQuadgram,.99999)
-frequencyQuadgramDF <- buildFrequencyDataSet(tdMapsQuadgram2)
+tdMapsQuadgram <- removeSparseTerms(tdMapsQuadgram,.9999)
+frequencyQuadgramDF <- buildFrequencyDataSet(tdMapsQuadgram)
 
 frequencyQuadgramDF <- computeProbability(frequencyQuadgramDF, frequencyUnigramDF)
+write.csv(frequencyQuadgramDF, "./data/freq_quadgram.csv")
+```
 
-
+```{r exploreUnigramFreq}
+library(ggplot2)
+library(ggthemes)
+library(wordcloud)
 pal <- brewer.pal(6,"Dark2")
 pal <- pal[-(1)]
+
+top20 <- head(frequencyUnigramDF,20)
+
+
+ggplot( top20, aes( x = freq, y = reorder( word, freq))) + 
+        geom_point( size = 3) + 
+        theme_bw() + 
+        theme( panel.grid.major.x = element_blank(), 
+               panel.grid.minor.x =element_blank(), 
+               panel.grid.major.y = element_line( color ="grey60", linetype ="dashed"))
+ 
 wordcloud(frequencyUnigramDF$word, frequencyUnigramDF$freq,scale = c(6,.6),colors =  pal,max.words = 300)
+``` 
+
 
 wordcloud(frequencyBigramDF$word, frequencyBigramDF$freq,scale = c(5,0.4),colors =  pal,max.words = 70)
 
@@ -220,8 +245,6 @@ kable(head(frequencyTrigramDF,20),caption = "All Trigram Frequency - Top 20")
 summary(frequencyTrigramDF)
 kable(head(frequencyQuadgramDF,20),caption = "All Quadgram Frequency - Top 20")
 summary(frequencyQuadgramDF)
-
-        
 
 ```
 
