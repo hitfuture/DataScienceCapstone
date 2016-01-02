@@ -1,7 +1,7 @@
 ---
-title: "Task 1 - Data acquisition and cleaning"
+title: "Build Accurate Modeling System"
 author: "Brett Taylor"
-date: "December 9, 2015"
+date: "Jan 1, 2016"
 output: word_document
 ---
 
@@ -29,7 +29,7 @@ curseCorp <- VCorpus(VectorSource(curseStops))
 #Clean and Process Data
 We need to tokenize the text based data.  
 
-```{r writeCorpusDataSets,cache=TRUE}
+```{r writeCorpusDataSets,cache=TRUE,eval=FALSE}
 library(tm)
 source("sampleData.R")
 
@@ -43,9 +43,9 @@ source("runModel.R")
 source("buildModel.R")
 
 
-blogsTermMap <- buildTermMap("./data/en_US.blogs.train.txt")
-twitterTermMap<- buildTermMap("./data/en_US.twitter.train.txt")
-newsTermMap<- buildTermMap("./data/en_US.news.train.txt")
+blogsTermMap <- buildTermMap("./data/en_US.blogs.txt")
+twitterTermMap<- buildTermMap("./data/en_US.twitter.txt")
+newsTermMap<- buildTermMap("./data/en_US.news.txt")
 
 
 ```
@@ -56,7 +56,7 @@ I think that when a user types in words into the window, they will need to have 
 
 #Blog
  
-```{r blogCloud,warning=FALSE,eval=FALSE}
+```{r blogCloud,warning=FALSE,eval=TRUE}
     
 library("RWeka")
 library(wordcloud)
@@ -98,7 +98,7 @@ wordcloud(blog.d4$word, blog.d4$freq,scale = c(3.1,0.2),colors =  pal,max.words 
 
 ##Twitter 
 
-```{r twitterCloud,warning=FALSE,eval=FALSE}
+```{r twitterCloud,warning=FALSE}
     
 map <- twitterTermMap
 tdmap1  <- buildUnigramMap(map)
@@ -136,7 +136,7 @@ wordcloud(twitter.d4$word, twitter.d4$freq,scale = c(3,0.2),colors =  pal,max.wo
 
 ##News
 
-```{r newsCloud,warning=FALSE,eval=FALSE}
+```{r newsCloud,warning=FALSE,eval=TRUE}
 map <- newsTermMap
 tdmap1  <- buildUnigramMap(map)
 tdmap2  <- buildBigramMap(map)
@@ -277,7 +277,7 @@ summary(frequencyQuadgramDF)
 Predicting the next word.  
 ###Create our Test Set
 
-```{r createTestSet}
+```{r createTestSet,eval=FALSE}
 blogsTestMap <- buildTermMap("./data/en_US.blogs.test.txt")
 twitterTestMap<- buildTermMap("./data/en_US.twitter.test.txt")
 newsTestMap<- buildTermMap("./data/en_US.news.test.txt")

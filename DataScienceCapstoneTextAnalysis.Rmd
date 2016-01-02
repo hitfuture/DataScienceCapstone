@@ -1,0 +1,482 @@
+---
+title: "Data Science Capstone Milestone 1- Text Prediction"
+author: "Brett Taylor"
+date: "December 29, 2015"
+output: html_document
+---
+#Data Science Capstone - Milestone 1
+
+#Overview 
+The Data Science Capstone project is allowing the team members to provide predictive text analysis based on text modeling techniques that are used across industries.  The work requires understanding the text modeling techniques, and utilizing models that provide relative accuracy in a reasonable fashion.  To develop a decent model, you must understand the data first through exploration.  The exploration allows for selection of models that may provide decent solutions.
+
+##Objectives 
+
+* Read and clean the text data   
+* Process the data and place it in a managable format
+* Provide exporatory analysis of textual data
+* Understand basic predictive models that could be reasonable
+* Validate that the path being followed will not require a complete redo
+
+##Data Source
+Text modeling requires a significant amount of text documents in order to acheive decent accuracy in predictions.   The Capstone provides text data from the following sources: 
+
+* Blogs
+* Twitter
+* News
+
+
+The data that is provided is found at the coursera site [Capstone Dataset](https://d396qusza40orc.cloudfront.net/dsscapstone/dataset/Coursera-SwiftKey.zip).  The dataset is over 500 MB of data in a compressed format.  It includes several language sources including english which is the language of choice for this project.   
+
+##Data Preparation
+Preparing the data requires being able to read the data into a format that is managable in the computing platform used to generate the predictive text model. The volume of data is too large to run on a single computer with 16GB of RAM. Below is 
+```{r echo=FALSE} 
+library(knitr)
+library(stringi)
+   fileInfo <- function(fileName) {
+           cmd <- sprintf("wc -lw %s",fileName)
+        val <- system(cmd,intern = TRUE)
+        val <- stri_trim_both(val)
+        return(val)
+   }
+  blogFileInfo <- unlist(unlist(strsplit(fileInfo("./data/en_US.blogs.txt"), split = " " )))
+  twitterFileInfo <-  unlist(unlist(strsplit(fileInfo("./data/en_US.twitter.txt"), split = " " )))
+  newsFileInfo <-  unlist(unlist(strsplit(fileInfo("./data/en_US.news.txt") , split = " " )))
+  line.counts <- c(blogFileInfo[1],twitterFileInfo[1],newsFileInfo[1])
+  word.counts <- c(blogFileInfo[2],twitterFileInfo[2],newsFileInfo[2])
+  fileNames <- c(blogFileInfo[3],twitterFileInfo[3],newsFileInfo[3])
+  dataSource <- c("Blogs","Twitter","News")
+  files <- data.frame(dataSource,line.counts,word.counts,fileNames)
+  kable(files, caption = "Data Sources which include line and word counts")
+
+
+   
+```
+
+##Build Test Data Sets
+The large data sets requires that a portion of the data is sampled.  The mechanism used is to enable this by building a binomial sample based on the lines, and dividing the data into 4 data sets.
+
+* Training - text used to train the text prediction model
+* Validation - text used to determine the validity of various models used
+* Testing - text used to ultimately test the prediction model
+* Leftover - text that is not consumed initially, and at a later date may be used for additional training
+
+The method used here is provided in the appendix.  It is sampled using the writeCorpusDataSets() function, and written to independent files for later processing.  The text files are found in the _./data/_ directory.
+
+```{r writeCorpusDataSets,cache=TRUE, eval=FALSE}
+library(tm)
+source("sampleData.R")
+
+writeCorpusDataSets("./data/en_US.blogs.txt")
+writeCorpusDataSets("./data/en_US.news.txt")
+writeCorpusDataSets("./data/en_US.twitter.txt")
+```
+##Data Cleansing 
+__Remove Profanities__ 
+
+We need to ensure profanities are not allowed to be predicted in our text model.   We utilized the Google _"What You Love"_ data source captured by Jamie W. on GitHub to create a list of stop words.  The data source is here, and required some cleaning up since it did not meet JSON standards: https://gist.github.com/jamiew/1112488.   Note that this includes very profane words and should not be shared with people that will be offended.
+
+
+```{r getBadWords,warning=FALSE,message=FALSE,echo=FALSE}
+library(RJSONIO)
+library(tm)
+Sys.setenv(NOAWT=TRUE)
+
+curseStops  <- names(fromJSON("./data/google_twunter_lol.json"))
+curseCorp <- VCorpus(VectorSource(curseStops))
+``` 
+
+Cleansing the data occurs when the text is processed. To process the text, the R TM package is utilized.  This allows the creation of Corpus which are objects that allow for easier text processing.   To do this, we process the data utilizing a function that was developed buildTermMap() {see appendix}.  
+
+##Text Processing
+
+```{r buildModel1,warning=FALSE,message=FALSE,eval=FALSE}
+source("runModel.R")
+source("buildModel.R")
+
+
+blogsTermMap <- buildTermMap("./data/en_US.blogs.train.txt")
+twitterTermMap<- buildTermMap("./data/en_US.twitter.train.txt")
+newsTermMap<- buildTermMap("./data/en_US.news.train.txt")
+
+
+```
+
+
+
+## Building the Model
+One of the ways we are building the predictive model is to create n-gram matricies that are used to compute the probability that a word will follow 1 or more documents.
+
+###Final Map
+```{r finalMaps,  echo=FALSE,eval=FALSE, message=FALSE,warning=FALSE}
+library(slam)
+options(mc.cores=1)
+
+maps <- c(blogsTermMap,twitterTermMap,newsTermMap)
+tdMapsUnigram <- buildUnigramMap(maps)
+#tdMapsUnigram2 <- removeSparseTerms(tdMapsUnigram,.999)
+#tdMapsUnigram <- rollup(tdMapsUnigram,2,na.rm=TRUE,FUN = sum)
+frequencyUnigramDF <- buildFrequencyDataSet(tdMapsUnigram)
+#frequencyUnigramDF <- frequencyUnigramDF%>%group_by(word,w_0)%>%summarize(freq)%>%ungroup()
+write.csv(frequencyUnigramDF, "./data/freq_unigram.csv")
+
+tdMapsBigram <- buildBigramMap(maps)
+#tdMapsBigram <- rollup(tdMapsBigram,2,na.r=TRUE,FUN=sum)
+tdMapsBigram <- removeSparseTerms(tdMapsBigram,.9999)
+frequencyBigramDF <- buildFrequencyDataSet(tdMapsBigram)
+frequencyBigramDF <- computeProbability(frequencyBigramDF, frequencyUnigramDF)
+write.csv(frequencyBigramDF, "./data/freq_bigram.csv")
+
+
+tdMapsTrigram <- buildTrigramMap(maps)
+tdMapsTrigram <- removeSparseTerms(tdMapsTrigram,.9999)
+frequencyTrigramDF <- buildFrequencyDataSet(tdMapsTrigram)
+frequencyTrigramDF <- computeProbability(frequencyTrigramDF, frequencyUnigramDF)
+write.csv(frequencyTrigramDF, "./data/freq_trigram.csv")
+
+tdMapsQuadgram <- buildQuadgramMap(maps)
+tdMapsQuadgram <- removeSparseTerms(tdMapsQuadgram,.9999)
+frequencyQuadgramDF <- buildFrequencyDataSet(tdMapsQuadgram)
+
+frequencyQuadgramDF <- computeProbability(frequencyQuadgramDF, frequencyUnigramDF)
+write.csv(frequencyQuadgramDF, "./data/freq_quadgram.csv")
+```
+
+##Exploring the Data
+The text data in the n-gram formats provide interesting information. We have computed frequency of terms by converting the corpus into Term Document matricies.  This allowed the summation of terms in the corpus. We explored this by utilizing frequency and word cloud based plotting.
+
+###Unigram
+####Frequency
+```{r exploreUnigramFreq, echo=FALSE, eval=FALSE}
+library(ggplot2)
+library(ggthemes)
+library(wordcloud)
+pal <- brewer.pal(6,"Dark2")
+pal <- pal[-(1)]
+
+top20 <- head(frequencyUnigramDF,20)
+
+
+ggplot( top20, aes( x = freq, y = reorder( word, freq))) + 
+        geom_point( size = 3) + 
+        theme_bw() + 
+        theme( panel.grid.major.x = element_blank(), 
+               panel.grid.minor.x =element_blank(), 
+               panel.grid.major.y = element_line( color ="grey60", linetype ="dashed"))
+ 
+``` 
+
+![FrequencyUni](figures/unigram-freq-all.png)
+
+####Cloud Map
+
+```{r exploreUnigramCloud, eval=FALSE,echo=FALSE}
+
+wordcloud(frequencyUnigramDF$word, frequencyUnigramDF$freq,scale = c(6,.6),colors =  pal,max.words = 300)
+
+```
+![cloudMapUni](figures/unigram-all.png)
+
+```{r exploreUnigramDataFreq, echo=FALSE}
+unifreq <- read.csv("./data/freq_unigram.csv",nrows = 10)
+kable(unifreq,caption = "Unigram frequency and probablity data - top 10")
+```
+
+###Bigram
+Bigrams include 2 words.  
+####Frequency
+```{r exploreBigramFreq, eval=FALSE, echo=FALSE}
+library(ggplot2)
+library(ggthemes)
+library(wordcloud)
+pal <- brewer.pal(6,"Dark2")
+pal <- pal[-(1)]
+
+top20 <- head(frequencyBigramDF,10)
+
+
+ggplot( top20, aes( x = freq, y = reorder( word, freq))) + 
+        geom_point( size = 3) + 
+        theme_bw() + 
+        theme( panel.grid.major.x = element_blank(), 
+               panel.grid.minor.x =element_blank(), 
+               panel.grid.major.y = element_line( color ="grey60", linetype ="dashed"))
+ 
+``` 
+
+![FrequencyBigram](figures/bigram-freq.png)
+
+####Cloud Map
+
+```{r exploreBigramCloud, eval=FALSE, echo=FALSE}
+
+wordcloud(frequencyBigramDF$word, frequencyUnigramDF$freq,scale = c(6,.6),colors =  pal,max.words = 300)
+
+```
+![cloudMapBi](figures/bigram-cloud.png)
+
+
+```{r exploreBigramDataFreq, echo=FALSE}
+unifreq <- read.csv("./data/freq_bigram.csv",nrows = 10)
+kable(unifreq,caption = "Bigram frequency and probablity data")
+```
+
+###Quadgram (4)
+Quadgrams include 4 words in each term.   
+```{r exploreQuadgramFreq, eval=FALSE , echo=FALSE}
+
+top20 <- head(frequencyQuadgramDF,20)
+
+
+ggplot( top20, aes( x = freq, y = reorder( word, freq))) + 
+        geom_point( size = 3) + 
+        theme_bw() + 
+        theme( panel.grid.major.x = element_blank(), 
+               panel.grid.minor.x =element_blank(), 
+               panel.grid.major.y = element_line( color ="grey60", linetype ="dashed"))
+
+```
+
+![FrequencyQuadgram](figures/quadgram-freq.png)
+
+```{r exploreQuadgramCloud, eval=FALSE , echo=FALSE}
+
+wordcloud(frequencyQuadgramDF$word, frequencyQuadgramDF$freq,scale = c(6,.6),colors =  pal,max.words = 300)
+
+```
+![cloudMapQuad](figures/quad-cloud.png)
+
+
+
+```{r exploreQuadgramDataFreq , echo=FALSE}
+unifreq <- read.csv("./data/freq_quadgram.csv",nrows = 10)
+kable(unifreq,caption = "Quadgram frequency and probablity data")
+```
+
+
+##Challenges
+There are several challenges that have been encountered so far.  The following areas are being addressed.
+
+* RAM and CPU capacity
+* Performance
+* Prediction Accuracy 
+
+The computation associated with the text analytics consumes a very large amount of RAM and also requires a large amount of computing processing.  Performance is impacted by this. Our current model requires over 3 seconds to return a  To allow for the future state, we will optimize the use of each of these.   
+
+Another challenge is the accuracy of prediction.  The current model is only reach approximately 50% accurate which is not sufficient.  
+
+
+#Path Forward
+
+We will be focused on developing a more accurate text analytics prediction model.  We will perform this utilizing either Good-Turing smoothing model, or the Kneser-Ney smoothing algorithm.  In addition, we will be deploying this through Shiny app which will allow for a simple method allowing the user to type in up to 4 words, and submit it.   This is where optimization of model will be required.
+
+#Appendix - Code
+```{r echo=FALSE, message=FALSE, echo=FALSE}
+source("runModel.R")
+source("buildModel.R")
+```
+##writeCorpusDataSets()    
+
+This is the code that samples the text files, and writes out the 4 file types. 
+
+```{r eval=FALSE}
+#Sample Data
+library(stringi)
+
+##sampleTestData function provides the ability to 
+sampleDataLineIndexes <- function(fileName ,seed=2096) {
+        
+        set.seed(seed)
+        cmd <- sprintf("wc -l %s",fileName)
+        val <- system(cmd,intern = TRUE)
+        val <- stri_trim_both(val)
+        lineCount  <- as.integer(regmatches(val,regexpr("^[0-9]+",val)))
+        prob <- 1/((log10(lineCount))*5)
+        testCases <- rbinom(lineCount,3,prob)
+        testCases
+}
+trainingFileNames <- function (fileName) {
+        fileExt <-  regmatches(fileName,regexpr("\\.[a-z0-9]{1,3}$",fileName))
+        filePrefix  <-  regmatches(fileName,regexpr("\\.[a-z0-9]{1,3}$",fileName),invert = TRUE)    
+        filePrefix  <- filePrefix[[1]][1]
+        paste(filePrefix,c(".train",".valid",".test",".testmore"),fileExt,sep="")
+}
+
+writeCorpusDataSets <- function(fileName){
+   input <- file(fileName,open = "r")
+   trainingFileNames <- trainingFileNames(fileName)  
+   
+   trainFileName <- trainingFileNames[1]
+   trainF <- file(trainFileName,open = "w" )   
+   close(trainF)
+   trainF <- file(trainFileName,open = "a" )   
+   
+   validFileName <- trainingFileNames[2]
+   validF <- file(validFileName,open = "w")   
+   close(validF)
+   validF <- file(validFileName,open = "a")   
+   testFileName <- trainingFileNames[3]
+   testF <- file(testFileName,open = "w")   
+   close(testF)
+   testF <- file(testFileName,open = "a")   
+   testMoreFileName <- trainingFileNames[4]
+   testMoreF <- file(testMoreFileName, open = "w")
+   close(testMoreF)
+   testMoreF <- file(testMoreFileName, open = "a")
+   
+   indexes <- sampleDataLineIndexes(fileName)   
+   for(n in indexes) {
+           line <- readLines(input,1)
+           if(n == 0) {
+               writeLines(line,testMoreF)    
+           } 
+           if(n == 1) {
+                   writeLines(line,trainF)      
+           }
+           if(n == 2) {
+                   writeLines(line,validF)   
+           }
+           if(n == 3) {
+                   writeLines(line,testF)   
+           }
+           
+   }
+   close(input)
+   close(trainF)
+   close(validF)
+   close(testF)
+   close(testMoreF)
+}
+ 
+
+``` 
+
+##buildTermModel()
+```{r eval=FALSE}
+library(tm)
+library(dplyr)
+library(RWeka)
+library(slam)
+library(testthat)
+
+buildTermMap <- function(fileName) {
+        runModel({
+                #   fconn <-  file("./data/en_US.blogs.train.txt")
+                fconn <-  file(fileName)
+                
+                sourceData <- readLines(fconn)#,100000)
+                close(fconn)
+                
+                dataSource <- VectorSource(x = sourceData)
+                corpus <- VCorpus(dataSource)
+        },"Read  data source, and create corpus")
+        skipWords <- function(x)
+                removeWords(x, curseStops)
+        as.lower <- function(x)
+                content_transformer(tolower)
+        list.of.functions <- list(
+             stripWhitespace,
+            skipWords,
+              removePunctuation,
+               removeNumbers ,
+               content_transformer(tolower) 
+            
+        )
+          
+        runModel({
+                bcMap <- tm_map(corpus, FUN = tm_reduce, tmFuns = list.of.functions)
+        },"process  corpus - remove curse words, and transform to lower")
+        return(bcMap)
+}
+
+#Information on how to optimize matrix build using slam
+#http://stackoverflow.com/questions/21921422/row-sum-for-large-term-document-matrix-simple-triplet-matrix-tm-package
+
+buildUnigramMap <- function(termMap) {
+        UnigramTokenizer <-
+                function(x)
+                        RWeka::NGramTokenizer(x, RWeka::Weka_control(min = 1, max = 1))
+        message("building term document matrix")
+        tdmap <-
+                TermDocumentMatrix(termMap, control = list(tokenize = UnigramTokenizer, wordLengths=c(1,Inf)))
+        message("rolling up")
+        tdmap <- rollup(tdmap,2,na.rm=TRUE,FUN = sum) 
+        message("rollup complete")
+        return(tdmap)
+       # row_sums(tdmap,na.rm=TRUE)
+        
+}
+
+buildBigramMap <- function(termMap) {
+        BigramTokenizer <-
+                function(x)
+                        RWeka::NGramTokenizer(x, RWeka::Weka_control(min = 2, max = 2))
+        tdmap <-
+                TermDocumentMatrix(termMap, control = list(tokenize = BigramTokenizer))
+        
+        message("rolling up")
+        tdmap <- rollup(tdmap,2,na.rm=TRUE,FUN = sum) 
+        message("rollup complete")
+        return(tdmap)}
+
+buildTrigramMap <- function(termMap) {
+        TrigramTokenizer <-
+                function(x)
+                        RWeka::NGramTokenizer(x, RWeka::Weka_control(min = 3, max = 3))
+        tdmap <-
+                TermDocumentMatrix(termMap, control = list(tokenize = TrigramTokenizer))
+        message("rolling up")
+        tdmap <- rollup(tdmap,2,na.rm=TRUE,FUN = sum) 
+        message("rollup complete")
+        return(tdmap)
+        
+}
+
+buildQuadgramMap <- function(termMap) {
+        QuadgramTokenizer <-
+                function(x)
+                        RWeka::NGramTokenizer(x, RWeka::Weka_control(min = 4, max = 4))
+        tdmap <-
+                TermDocumentMatrix(termMap, control = list(tokenize = QuadgramTokenizer))
+        message("rolling up")
+        tdmap <- rollup(tdmap,2,na.rm=TRUE,FUN = sum) 
+        message("rollup complete")
+        return(tdmap)}
+
+buildFrequencyDataSet <- function(tdmap) {
+        m <- as.matrix((tdmap))
+        v <- sort(rowSums(m),decreasing = TRUE)
+        d <- data.frame(word = (names(v)),freq = v)
+        grams <-
+                sapply(as.character(d$word), function(x) { 
+                        rev(strsplit(x,split = " ",fixed = TRUE))})
+        wordCount  <- length(grams[[1]])
+       
+                columnNames <- paste("w_",(wordCount:1)-1,sep = "")
+                for (i in 1:wordCount) {
+                        vector <- sapply(grams , function(x)
+                                x[i])
+                        d[,(columnNames[i])] <- vector
+                
+                }
+                 
+        d
+}
+
+#Assign Probability
+freqOfWord <- function(wrds , unigram ) {
+        unigram[wrds,]$freq
+}
+
+#Compute the probability of the second to the last word in an Ngram
+computeProbability <- function (ngram, unigram) {
+        uni <-  freqOfWord((ngram$w_1),unigram)
+        ngram$freq.w_1 <- uni
+        ngram %>%mutate(prob = freq / freq.w_1)
+}
+
+
+assignProbability <- function(data, uni) {
+#         lapply(data$)
+#         data <- data%>%mutate(prob =  )
+}
+```
