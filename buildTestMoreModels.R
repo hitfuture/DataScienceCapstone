@@ -5,7 +5,7 @@ source("sampleData.R")
 source("runModel.R")
 source("buildModel.R")
 library(slam)
-options(mc.cores=4)
+options(mc.cores=1)
 
 freqFileNames <- function (fileNames,type) {
         fileExt <-  regmatches(fileNames,regexpr("\\.[a-z0-9]{1,3}$",fileNames))
