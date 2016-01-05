@@ -52,3 +52,46 @@ calc.nrz.estimate <- function(data){
         dr <- c(0.5*(d[-1] + d[- length(d)]),d[length(d)] )
         return(nr/dr)
 }
+
+ computeGoodTuring <- function(data) {
+        xr <- data$freq
+        xnr <- data$n_r
+        xN <- sum(xr * xnr)
+        
+        #make averaging transform
+        xnrz <- nrzest(xr,xnr)
+         
+        #get Linear Good-Turing estimate
+        xf <- lsfit(log(xr),log(xnrz))
+        xcoef <- xf$coef
+        xrst <- rstest(xr,xcoef)
+        xrstrel <- xrst / xr
+        #get Turing estimate
+        xrtry <- xr == c(xr[-1] - 1,0)
+        xrstarel <- rep(0,length(xr))
+        xrstarel[xrtry] <-
+                (xr[xrtry] + 1) / xr[xrtry] * c(xnr[-1],0)[xrtry] / xnr[xrtry]
+        #make switch from Turing to LGT estimates
+        tursd <- rep(1,length(xr))
+        for (i in 1:length(xr))
+                if(xrtry[i])
+                        tursd[i] <- (i + 1) / xnr[i] * sqrt(xnr[i + 1] * (1 + xnr[i + 1] /
+                                                                                  xnr[i]))
+        xrstcmbrel <- rep(0,length(xr))
+        useturing <- TRUE
+        for (r in 1:length(xr)) {
+                if (!useturing)
+                        xrstcmbrel[r] <- xrstrel[r]
+                else if (abs(xrstrel - xrstarel)[r] * r / tursd[r] > 1.65)
+                        
+                        xrstcmbrel[r] <- xrstarel[r]
+                else {
+                        useturing <- FALSE; xrstcmbrel[r] <- xrstrel[r]
+                }
+        }
+        
+        #renormalize the probabilities for observed objects
+        sumpraw <- sum(xrstcmbrel * xr * xnr / xN)
+        xrstcmbrel <- xrstcmbrel * (1 - xnr[1] / xN) / sumpraw
+        
+}
