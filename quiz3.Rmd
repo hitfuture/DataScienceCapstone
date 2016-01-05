@@ -1,0 +1,233 @@
+---
+title: "Quiz 3"
+output: html_document
+---
+```{r}
+library(knitr)
+```
+
+Question 1
+
+_When you breathe, I want to be the air for you. I'll be there for you, I'd live and I'd_
+http://www.bonjovi.com/music/39333067588/this-left-feels-right/lyrics/40537307034/ill-be-there-for-you#.VoolVvkrIpY
+
+*give {inital estimate}
+*die [X] - 
+*eat
+*sleep
+
+```{r}
+
+wordOptions <- c("give","die","eat","sleep")
+uni.words <- freq.uni%>%filter(word %in% wordOptions)%>%arrange(desc(freq))
+bi.words <- freq.bi%>%filter(word %in% paste("id",wordOptions))%>%arrange(desc(freq))
+tri.words <- freq.tri%>%filter(word %in% paste("and id",wordOptions))%>%arrange(desc(freq))
+quad.words <- freq.quad%>%filter(word %in% paste("live and id",wordOptions))%>%arrange(desc(freq))
+
+                
+
+```
+
+
+Guy at my table's wife got up to go to the bathroom and I asked about dessert and he started telling me about his
+
+* spiritual (2)
+* horticultural
+financial  (1)
+marital  {Seems like this may be it}
+
+```{r, echo=FALSE}
+a2 <- freq.quad%>%filter(grepl("^me about his.*",words))
+
+wordOptions <- c("spiritual","horticultural","financial","marital")
+uni.words <- freq.uni%>%filter(word %in% wordOptions)%>%arrange(desc(freq))
+bi.words <- freq.bi%>%filter(word %in% paste("his",wordOptions))%>%arrange(desc(freq))
+tri.words <- freq.tri%>%filter(word %in% paste("about his",wordOptions))%>%arrange(desc(freq))
+quad.words <- freq.quad%>%filter(word %in% paste("me about his",wordOptions))%>%arrange(desc(freq))
+quad.words.4 <- freq.quad%>%filter(grepl("wife .*marital",word))%>%arrange(desc(freq))
+
+
+```
+
+I'd give anything to see arctic monkeys this
+month
+morning
+decade
+weekend
+
+Here is where the algorithim computes based on first word and last 2 words using the quadgram.   
+When doing this, the "weekend" wins
+When using a bigram - "morning" wins
+
+
+```{r, echo=FALSE}
+ 
+wordOptions <- c("month",
+"morning",
+"decade",
+"weekend")
+uni.words <- freq.uni%>%filter(word %in% wordOptions)%>%arrange(desc(freq))
+bi.words <- freq.bi%>%filter(word %in% paste("this",wordOptions))%>%arrange(desc(freq))
+tri.words <- freq.tri%>%filter(word %in% paste("monkeys this",wordOptions))%>%arrange(desc(freq))
+tri.words.1 <- freq.tri%>%filter(grepl(".*this month$",word))%>%arrange(desc(freq))
+tri.words.2 <- freq.tri%>%filter(grepl(".*this morning$",word))%>%arrange(desc(freq))
+tri.words.3 <- freq.tri%>%filter(grepl(".*this decade$",word))%>%arrange(desc(freq))
+tri.words.4 <- freq.tri%>%filter(grepl(".*this weekend$",word))%>%arrange(desc(freq))
+quad.words.1 <- freq.quad%>%filter(grepl(".*this month$",word))%>%arrange(desc(freq))
+quad.words.2 <- freq.quad%>%filter(grepl("^see .*this morning$",word))%>%arrange(desc(freq))
+quad.words.3 <- freq.quad%>%filter(grepl("^see .*this decade$",word))%>%arrange(desc(freq))
+quad.words.4 <- freq.quad%>%filter(grepl("^see .*this weekend$",word))%>%arrange(desc(freq))
+
+```
+
+Talking to your mom has the same effect as a hug and helps reduce your
+hunger
+stress
+sleepiness
+happiness
+
+```{r}
+wordOptions <- c("hunger",
+"stress",
+"sleepiness",
+"happiness")
+uni.words <- freq.uni%>%filter(word %in% wordOptions)%>%arrange(desc(freq))
+bi.words <- freq.bi%>%filter(word %in% paste("your",wordOptions))%>%arrange(desc(freq))
+tri.words <- freq.tri%>%filter(word %in% paste("reduce your",wordOptions))%>%arrange(desc(freq))
+tri.words.1 <- freq.tri%>%filter(grepl(".*this month$",word))%>%arrange(desc(freq))
+tri.words.2 <- freq.tri%>%filter(grepl(".*this morning$",word))%>%arrange(desc(freq))
+tri.words.3 <- freq.tri%>%filter(grepl(".*this decade$",word))%>%arrange(desc(freq))
+tri.words.4 <- freq.tri%>%filter(grepl(".*this weekend$",word))%>%arrange(desc(freq))
+
+quad.words <- freq.quad%>%filter(grepl("hug .*reduce your.*",word))%>%arrange(desc(freq))
+quad.words.1 <- freq.quad%>%filter(grepl(".*this month$",word))%>%arrange(desc(freq))
+
+quad.words.1 <- freq.quad%>%filter(grepl(".*this month$",word))%>%arrange(desc(freq))
+quad.words.2 <- freq.quad%>%filter(grepl("^see .*this morning$",word))%>%arrange(desc(freq))
+quad.words.3 <- freq.quad%>%filter(grepl("^see .*this decade$",word))%>%arrange(desc(freq))
+quad.words.4 <- freq.quad%>%filter(grepl("^see .*this weekend$",word))%>%arrange(desc(freq))
+
+
+````
+
+When you were in Holland you were like 1 inch away from me but you hadn't time to take a
+look
+minute
+walk
+picture
+
+
+```{r}
+wordOptions <- c("look",
+"minute",
+"walk",
+"picture")
+uni.words <- freq.uni%>%filter(word %in% wordOptions)%>%arrange(desc(freq))
+bi.words <- freq.bi%>%filter(word %in% paste("a",wordOptions))%>%arrange(desc(freq))
+tri.words <- freq.tri%>%filter(word %in% paste("take a",wordOptions))%>%arrange(desc(freq))
+tri.words.1 <- freq.tri%>%filter(grepl(".*this month$",word))%>%arrange(desc(freq))
+tri.words.2 <- freq.tri%>%filter(grepl(".*this morning$",word))%>%arrange(desc(freq))
+tri.words.3 <- freq.tri%>%filter(grepl(".*this decade$",word))%>%arrange(desc(freq))
+tri.words.4 <- freq.tri%>%filter(grepl(".*this weekend$",word))%>%arrange(desc(freq))
+
+quad.words <- freq.tri%>%filter(word %in% paste("to take a",wordOptions))%>%arrange(desc(freq))
+quad.words.1 <- freq.quad%>%filter(grepl(".*this month$",word))%>%arrange(desc(freq))
+
+quad.words.1 <- freq.quad%>%filter(grepl(".*this month$",word))%>%arrange(desc(freq))
+quad.words.2 <- freq.quad%>%filter(grepl("^see .*this morning$",word))%>%arrange(desc(freq))
+quad.words.3 <- freq.quad%>%filter(grepl("^see .*this decade$",word))%>%arrange(desc(freq))
+quad.words.4 <- freq.quad%>%filter(grepl("^see .*this weekend$",word))%>%arrange(desc(freq))
+
+
+```
+
+
+
+I'd just like all of these questions answered, a presentation of evidence, and a jury to settle the
+matter
+account
+case
+incident
+```{r}
+wordOptions <- c("matter",
+"account",
+"case",
+"incident")
+uni.words <- freq.uni%>%filter(word %in% wordOptions)%>%arrange(desc(freq))
+bi.words <- freq.bi%>%filter(word %in% paste("the",wordOptions))%>%arrange(desc(freq))
+tri.words <- freq.tri%>%filter(word %in% paste("settle the",wordOptions))%>%arrange(desc(freq))
+quad.words <- freq.tri%>%filter(word %in% paste("to settle the",wordOptions))%>%arrange(desc(freq)) 
+```
+
+I can't deal with unsymetrical things. I can't even hold an uneven number of bags of groceries in each
+toe
+hand
+finger
+arm
+
+
+```{r}
+wordOptions <- c("toe",
+"hand",
+"finger",
+"arm")
+uni.words <- freq.uni%>%filter(word %in% wordOptions)%>%arrange(desc(freq))
+bi.words <- freq.bi%>%filter(word %in% paste("each",wordOptions))%>%arrange(desc(freq))
+tri.words <- freq.tri%>%filter(word %in% paste("in each",wordOptions))%>%arrange(desc(freq))
+quad.words <- freq.tri%>%filter(word %in% paste("groceries in each",wordOptions))%>%arrange(desc(freq)) 
+```
+
+#Question 8
+Every inch of you is perfect from the bottom to the
+center
+top
+middle
+side
+
+```{r}
+wordOptions <- c("center",
+"top",
+"middle",
+"side")
+uni.words <- freq.uni%>%filter(word %in% wordOptions)%>%arrange(desc(freq))
+bi.words <- freq.bi%>%filter(word %in% paste("the",wordOptions))%>%arrange(desc(freq))
+tri.words <- freq.tri%>%filter(word %in% paste("to the",wordOptions))%>%arrange(desc(freq))
+quad.words <- freq.tri%>%filter(word %in% paste("bottom to the",wordOptions))%>%arrange(desc(freq)) 
+```
+
+Question 9
+I’m thankful my childhood was filled with imagination and bruises from playing
+weekly
+daily
+outside
+inside
+
+```{r}
+wordOptions <- c("weekly",
+"daily",
+"outside",
+"inside")
+uni.words <- freq.uni%>%filter(word %in% wordOptions)%>%arrange(desc(freq))
+bi.words <- freq.bi%>%filter(word %in% paste("playing",wordOptions))%>%arrange(desc(freq))
+tri.words <- freq.tri%>%filter(word %in% paste("from playing",wordOptions))%>%arrange(desc(freq))
+quad.words <- freq.tri%>%filter(word %in% paste("bruises from playing",wordOptions))%>%arrange(desc(freq)) 
+```
+
+Question 10
+I like how the same people are in almost all of Adam Sandler's
+pictures
+movies
+novels
+stories
+
+
+```{r}
+wordOptions <- c("novels",
+"movies",
+"stories",
+"pictures")
+uni.words <- freq.uni%>%filter(word %in% wordOptions)%>%arrange(desc(freq))
+bi.words <- freq.bi%>%filter(word %in% paste("sandlers",wordOptions))%>%arrange(desc(freq))
+tri.words <- freq.tri%>%filter(word %in% paste("adam sandler",wordOptions))%>%arrange(desc(freq))
+quad.words <- freq.tri%>%filter(word %in% paste("of adam sandlers",wordOptions))%>%arrange(desc(freq)) 
+```

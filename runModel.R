@@ -6,7 +6,7 @@ secureAuthentication <- function () {
              user.name="brett.vmail@gmail.com", passwd="ysfwzrcbpzxffcdg",tls=TRUE)
 }
 
-sendMessageToMe <- function (subject, body) {
+sendMessageToMe <- function (subject, body,send=FALSE) {
   sender <- "brett.vmail@gmail.com"
   recipients <- c("brett.r.taylor@me.com")
   send.mail(from = sender,
@@ -15,7 +15,7 @@ sendMessageToMe <- function (subject, body) {
             body = body,
             smtp = secureAuthentication(),
             authenticate = TRUE,
-            send = TRUE,
+            send = send,
             debug=FALSE)
 }
 

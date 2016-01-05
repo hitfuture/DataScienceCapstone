@@ -56,7 +56,7 @@ I think that when a user types in words into the window, they will need to have 
 
 #Blog
  
-```{r blogCloud,warning=FALSE,eval=TRUE}
+```{r blogCloud,warning=FALSE,eval=FALSE}
     
 library("RWeka")
 library(wordcloud)
@@ -98,7 +98,7 @@ wordcloud(blog.d4$word, blog.d4$freq,scale = c(3.1,0.2),colors =  pal,max.words 
 
 ##Twitter 
 
-```{r twitterCloud,warning=FALSE}
+```{r twitterCloud,warning=FALSE,eval=FALSE}
     
 map <- twitterTermMap
 tdmap1  <- buildUnigramMap(map)
@@ -136,7 +136,7 @@ wordcloud(twitter.d4$word, twitter.d4$freq,scale = c(3,0.2),colors =  pal,max.wo
 
 ##News
 
-```{r newsCloud,warning=FALSE,eval=TRUE}
+```{r newsCloud,warning=FALSE,eval=FALSE}
 map <- newsTermMap
 tdmap1  <- buildUnigramMap(map)
 tdmap2  <- buildBigramMap(map)
