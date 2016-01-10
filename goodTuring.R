@@ -53,7 +53,7 @@ calc.nrz.estimate <- function(data){
         return(nr/dr)
 }
 
- computeGoodTuring <- function(data) {
+ computeGoodTuring <- function(data,useTuring=TRUE) {
         xr <- data$freq
         xnr <- data$n_r
         xN <- sum(xr * xnr)
@@ -78,10 +78,12 @@ calc.nrz.estimate <- function(data){
                         tursd[i] <- (i + 1) / xnr[i] * sqrt(xnr[i + 1] * (1 + xnr[i + 1] /
                                                                                   xnr[i]))
         xrstcmbrel <- rep(0,length(xr))
-        useturing <- TRUE
+        useturing <- useTuring
         for (r in 1:length(xr)) {
                 if (!useturing)
-                        xrstcmbrel[r] <- xrstrel[r]
+                #        xrstcmbrel[r] <- xnrz[r]
+                       xrstcmbrel[r] <- xrstrel[r]
+
                 else if (abs(xrstrel - xrstarel)[r] * r / tursd[r] > 1.65)
                         
                         xrstcmbrel[r] <- xrstarel[r]
