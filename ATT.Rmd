@@ -1,0 +1,137 @@
+---
+title: "ATTUsage"
+author: "Brett Taylor"
+date: "January 3, 2016"
+output: pdf_document
+---
+```{r echo=FALSE,w}
+knitr::opts_chunk$set(echo=FALSE)
+knitr::opts_chunk$set(warning=FALSE)
+knitr::opts_chunk$set(message=FALSE)
+
+```
+
+```{r,warning=FALSE}
+library(data.table)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(RColorBrewer)
+require(lubridate)
+
+library(ggplot2)
+library(ggthemes)
+library(wordcloud)
+library(knitr)
+
+
+cleanData <- function (.data) {
+        
+        data <- .data%>%filter(`Usage Type`=="Web")
+        data <- data%>%
+                mutate(dateTime = as.POSIXct(paste(Date,"/2015", " ",Time,sep = ""),format="%m/%d/%Y %I:%M %p"),
+                       dt = as.Date(dateTime),
+                       hr= hour(dateTime))
+        data[which(month(data$dt) == 1 &(year(data$dt)) == 2015),]$dt <-(data[which(month(data$dt) == 1 &(year(data$dt))== 2015),]$dt) + 365
+        year(data[which(month(data$dateTime) == 1 &(year(data$dateTime)) == 2015),]$dateTime) <-year(data[which(month(data$dateTime) == 1 &(year(data$dateTime))== 2015),]$dateTime) + 1
+        
+         data
+}
+
+kevin <- fread("./data/9162232602_TextDataDetails.csv",header=TRUE)
+kevin.web <- cleanData(kevin)
+kevin.web <-  cleanData(fread("./data/9162232602_TextDataDetails-v2.csv",header=TRUE))
+ 
+shannon <- fread("./data/2089578950_TextDataDetails.csv",header=TRUE)
+shannon.web <- cleanData(shannon)
+
+shannon2 <- fread("./data/2089578950_TextDataDetails-v2.csv",header=TRUE)
+shannon.web <- cleanData(shannon2)
+```
+ 
+#Kevin
+
+```{r}
+pal <- brewer.pal(6,"Dark2")
+pal <- pal[-(1)]
+
+p <- ggplot( kevin.web, aes( x = dt, y = hr, fill = Usage)) 
+p + geom_raster()+
+        theme_bw()
+
+kevin.tot.usage <- sum(kevin.web$Usage)
+ 
+```
+
+
+__Kevin's total usage: `r (prettyNum(kevin.tot.usage/(1024),bigmark=","))` MB__
+
+
+```{r}
+ggplot( kevin.web, aes( x = dt, y = Usage,fill=weekdays(dateTime))) + 
+        geom_bar( size = 1,stat="identity") + 
+        theme_bw() + 
+        theme( panel.grid.major.x = element_blank(), 
+               panel.grid.minor.x =element_blank(), 
+               panel.grid.major.y = element_line( color ="grey60", linetype ="dashed"))
+```
+
+```{r}
+ggplot( kevin.web, aes( x = dt, y = hr ,size = Usage, color=weekdays(dateTime))) + 
+        geom_point(  ) + 
+        theme_bw() + 
+        theme( panel.grid.major.x = element_blank(), 
+               panel.grid.minor.x =element_blank(), 
+               panel.grid.major.y = element_line( color ="grey60", linetype ="dashed"))
+
+
+
+```
+
+#Kevin's Usage Table
+
+
+```{r}
+kable(kevin.web%>%select(-dt,-hr,-dateTime,-Charges))
+```
+
+#Shannon 
+
+```{r}
+pal <- brewer.pal(6,"Dark2")
+pal <- pal[-(1)]
+
+p <- ggplot( shannon.web, aes( x = dt, y = hr, fill = Usage)) 
+p + geom_raster() +
+theme_bw()
+
+```
+
+__Shannon's total usage: `r prettyNum(sum(shannon.web$Usage/1024),bigmark=",")` MB__
+
+```{r}
+ggplot( shannon.web, aes( x = as.factor(dt), y = Usage ,fill=weekdays(dateTime))) + 
+        geom_bar( size =1,stat="identity") + 
+        theme_bw() + 
+        theme( panel.grid.major.x = element_blank(), 
+               panel.grid.minor.x =element_blank(), 
+               panel.grid.major.y = element_line( color ="grey60", linetype ="dashed"))
+
+```
+
+```{r}
+ggplot( shannon.web, aes( x = as.factor(dt), y = hr ,size = Usage,color=weekdays(dateTime))) + 
+        geom_point(  ) + 
+#        geom_jitter(aes(y=hr)) +
+        theme_bw() + 
+        theme( panel.grid.major.x = element_blank(), 
+               panel.grid.minor.x =element_blank(), 
+               panel.grid.major.y = element_line( color ="grey60", linetype ="dashed"))
+```
+
+
+#Shannon's Usage Table
+
+```{r}
+kable(shannon.web%>%select(-dt,-hr,-dateTime,-Charges))
+```

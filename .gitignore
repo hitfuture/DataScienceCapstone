@@ -1,3 +1,16 @@
 .Rproj.user
 .Rhistory
 .RData
+*.csv
+*.docx
+*.html
+*.xlsx
+*.xls
+*.pdf
+*.txt
+*.png
+figures/*
+data/*
+*_files/*
+*_cache/*
+rsconnect/*
