@@ -15,11 +15,16 @@ buildTermMap <- function(fileName) {
                 dataSource <- VectorSource(x = sourceData)
                 corpus <- VCorpus(dataSource)
         },"Read  data source, and create corpus")
+        
+        removeEmoticons <- function(x) {iconv(x = val,from = "latin1",to = "ASCII",mark = TRUE,sub ="")}
+        
         skipWords <- function(x)
                 removeWords(x, curseStops)
         as.lower <- function(x)
                 content_transformer(tolower)
+        
         list.of.functions <- list(
+             removeEmoticons,
              stripWhitespace,
             skipWords,
               removePunctuation,
