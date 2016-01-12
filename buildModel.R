@@ -3,8 +3,16 @@ library(dplyr)
 library(RWeka)
 library(slam)
 library(testthat)
+library(RJSONIO)
+library(tm)
+Sys.setenv(NOAWT = TRUE)
 
-buildTermMap <- function(fileName) {
+curseStops  <- names(fromJSON("./data/google_twunter_lol.json"))
+curseCorp <- VCorpus(VectorSource(curseStops))
+delims <- " \\t\\r\\n.!?,;\"()"
+
+
+buildTermMap <- function(fileName,keepApostrophe = TRUE) {
         runModel({
                 #   fconn <-  file("./data/en_US.blogs.train.txt")
                 fconn <-  file(fileName)
@@ -16,25 +24,52 @@ buildTermMap <- function(fileName) {
                 corpus <- VCorpus(dataSource)
         },"Read  data source, and create corpus")
         
-        removeEmoticons <- function(x) {iconv(x = val,from = "latin1",to = "ASCII",mark = TRUE,sub ="")}
+        removeEmoticons <- function(x) {
+                iconv(
+                        x = x,from = "latin1",to = "ASCII",mark = TRUE,sub = ""
+                )
+        }
         
         skipWords <- function(x)
                 removeWords(x, curseStops)
         as.lower <- function(x)
                 content_transformer(tolower)
+        removePunctuationAndNumbers <- function(x) {
+                gsub("[^[:alnum:][:space:]']","", x)
+        }
+        removeHashTags <- function(x) {
+                gsub("#\\S+","", x)
+        }
         
-        list.of.functions <- list(
-             removeEmoticons,
-             stripWhitespace,
-            skipWords,
-              removePunctuation,
-               removeNumbers ,
-               content_transformer(tolower) 
-            
-        )
-          
+        list.of.functions <-  if (keepApostrophe) {
+                list(
+                        content_transformer(removeEmoticons),
+                        stripWhitespace,
+                        skipWords,
+                        content_transformer(removeHashTags),
+                        content_transformer(removePunctuationAndNumbers),
+                        removeNumbers,
+                        content_transformer(tolower)
+                        
+                )
+        } else {
+                list(
+                        content_transformer(removeEmoticons),
+                        stripWhitespace,
+                        skipWords,
+                        content_transformer(removeHashTags),
+                        removePunctuation,
+                        removeNumbers ,
+                        content_transformer(tolower)
+                        
+                )
+        }
+        
         runModel({
-                bcMap <- tm_map(corpus, FUN = tm_reduce, tmFuns = list.of.functions)
+                bcMap <-
+                        tm_map(
+                                corpus, FUN = tm_reduce, tmFuns = list.of.functions,lazy = TRUE
+                        )
         },"process  corpus - remove curse words, and transform to lower")
         return(bcMap)
 }
@@ -45,38 +80,40 @@ buildTermMap <- function(fileName) {
 buildUnigramMap <- function(termMap) {
         UnigramTokenizer <-
                 function(x)
-                        RWeka::NGramTokenizer(x, RWeka::Weka_control(min = 1, max = 1))
+                        RWeka::NGramTokenizer(x, RWeka::Weka_control(min = 1, max = 1,delimiters =delims))
         message("building term document matrix")
         tdmap <-
-                TermDocumentMatrix(termMap, control = list(tokenize = UnigramTokenizer, wordLengths=c(1,Inf)))
+                TermDocumentMatrix(termMap, control = list(tokenize = UnigramTokenizer, wordLengths =
+                                                                   c(1,Inf)))
         message("rolling up")
-        tdmap <- rollup(tdmap,2,na.rm=TRUE,FUN = sum) 
+        tdmap <- rollup(tdmap,2,na.rm = TRUE,FUN = sum)
         message("rollup complete")
         return(tdmap)
-       # row_sums(tdmap,na.rm=TRUE)
+        # row_sums(tdmap,na.rm=TRUE)
         
 }
 
 buildBigramMap <- function(termMap) {
         BigramTokenizer <-
                 function(x)
-                        RWeka::NGramTokenizer(x, RWeka::Weka_control(min = 2, max = 2))
+                        RWeka::NGramTokenizer(x, RWeka::Weka_control(min = 2, max = 2,delimiters =delims))
         tdmap <-
                 TermDocumentMatrix(termMap, control = list(tokenize = BigramTokenizer))
         
         message("rolling up")
-        tdmap <- rollup(tdmap,2,na.rm=TRUE,FUN = sum) 
+        tdmap <- rollup(tdmap,2,na.rm = TRUE,FUN = sum)
         message("rollup complete")
-        return(tdmap)}
+        return(tdmap)
+}
 
 buildTrigramMap <- function(termMap) {
         TrigramTokenizer <-
                 function(x)
-                        RWeka::NGramTokenizer(x, RWeka::Weka_control(min = 3, max = 3))
+                        RWeka::NGramTokenizer(x, RWeka::Weka_control(min = 3, max = 3,delimiters =delims))
         tdmap <-
                 TermDocumentMatrix(termMap, control = list(tokenize = TrigramTokenizer))
         message("rolling up")
-        tdmap <- rollup(tdmap,2,na.rm=TRUE,FUN = sum) 
+        tdmap <- rollup(tdmap,2,na.rm = TRUE,FUN = sum)
         message("rollup complete")
         return(tdmap)
         
@@ -85,36 +122,38 @@ buildTrigramMap <- function(termMap) {
 buildQuadgramMap <- function(termMap) {
         QuadgramTokenizer <-
                 function(x)
-                        RWeka::NGramTokenizer(x, RWeka::Weka_control(min = 4, max = 4))
+                        RWeka::NGramTokenizer(x, RWeka::Weka_control(min = 4, max = 4,delimiters =delims))
         tdmap <-
                 TermDocumentMatrix(termMap, control = list(tokenize = QuadgramTokenizer))
         message("rolling up")
-        tdmap <- rollup(tdmap,2,na.rm=TRUE,FUN = sum) 
+        tdmap <- rollup(tdmap,2,na.rm = TRUE,FUN = sum)
         message("rollup complete")
-        return(tdmap)}
+        return(tdmap)
+}
 
 buildFrequencyDataSet <- function(tdmap) {
         m <- as.matrix((tdmap))
         v <- sort(rowSums(m),decreasing = TRUE)
         d <- data.frame(word = (names(v)),freq = v)
         grams <-
-                sapply(as.character(d$word), function(x) { 
-                        rev(strsplit(x,split = " ",fixed = TRUE))})
+                sapply(as.character(d$word), function(x) {
+                        rev(strsplit(x,split = " ",fixed = TRUE))
+                })
         wordCount  <- length(grams[[1]])
-       
-                columnNames <- paste("w_",(wordCount:1)-1,sep = "")
-                for (i in 1:wordCount) {
-                        vector <- sapply(grams , function(x)
-                                x[i])
-                        d[,(columnNames[i])] <- vector
+        
+        columnNames <- paste("w_",(wordCount:1) - 1,sep = "")
+        for (i in 1:wordCount) {
+                vector <- sapply(grams , function(x)
+                        x[i])
+                d[,(columnNames[i])] <- vector
                 
-                }
-                 
+        }
+        
         d
 }
 
 #Assign Probability
-freqOfWord <- function(wrds , unigram ) {
+freqOfWord <- function(wrds , unigram) {
         unigram[wrds,]$freq
 }
 
@@ -122,11 +161,11 @@ freqOfWord <- function(wrds , unigram ) {
 computeProbability <- function (ngram, unigram) {
         uni <-  freqOfWord((ngram$w_1),unigram)
         ngram$freq.w_1 <- uni
-        ngram %>%mutate(prob = freq / freq.w_1)
+        ngram %>% mutate(prob = freq / freq.w_1)
 }
 
 
 assignProbability <- function(data, uni) {
-#         lapply(data$)
-#         data <- data%>%mutate(prob =  )
+        #         lapply(data$)
+        #         data <- data%>%mutate(prob =  )
 }

@@ -101,7 +101,8 @@ newsTermMap<- buildTermMap("./data/en_US.news.train.txt")
 
 ```
 
-
+###What to capitalize
+[Capitalization Opportunities](http://libraryonline.com/?pID=48)
 
 ## Building the Model
 One of the ways we are building the predictive model is to create n-gram matricies that are used to compute the probability that a word will follow 1 or more documents.
@@ -112,7 +113,7 @@ library(slam)
 options(mc.cores=1)
 
 maps <- c(blogsTermMap,twitterTermMap,newsTermMap)
-tdMapsUnigram <- buildUnigramMap(maps)
+tdMapsUnigram <- buildUnigramMap(c(blogsTermMap))
 #tdMapsUnigram2 <- removeSparseTerms(tdMapsUnigram,.999)
 #tdMapsUnigram <- rollup(tdMapsUnigram,2,na.rm=TRUE,FUN = sum)
 frequencyUnigramDF <- buildFrequencyDataSet(tdMapsUnigram)

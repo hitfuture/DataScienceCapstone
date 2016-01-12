@@ -1,0 +1,64 @@
+---
+title: "TestModelBuild"
+author: "Brett Taylor"
+date: "January 10, 2016"
+output: html_document
+---
+#Build Models
+```{r buildModel1,warning=FALSE}
+library(RJSONIO)
+source("runModel.R")
+source("buildModel.R")
+curseStops  <- names(fromJSON("./data/google_twunter_lol.json"))
+
+
+
+blogsTermMap <- buildTermMap("./data/en_US.blogs.test.txt",keepApostrophe=TRUE)
+twitterTermMap<- buildTermMap("./data/en_US.twitter.test.txt",keepApostrophe=TRUE)
+newsTermMap<- buildTermMap("./data/en_US.news.test.txt",keepApostrophe=TRUE)
+
+
+```
+
+
+
+##Mappings 
+
+```{r twitterCloud,warning=FALSE ,echo=FALSE}
+options(mc.cores=1)
+
+   library(wordcloud) 
+library(knitr)
+map <- c(twitterTermMap,blogsTermMap,newsTermMap)
+tdmap1  <- buildUnigramMap(map)
+tdmap2  <- buildBigramMap(map)
+tdmap3 <- buildTrigramMap(map)
+tdmap4 <- buildQuadgramMap(map)
+
+twitter.d1 <- buildFrequencyDataSet(tdmap1)
+twitter.d2 <- buildFrequencyDataSet(tdmap2)
+twitter.d3 <- buildFrequencyDataSet(tdmap3)
+twitter.d4 <- buildFrequencyDataSet(tdmap4)
+
+
+#inspect(tdmap)
+#object.size(tdmap)
+kable(head(twitter.d1,20),caption = " Unigram Frequency - Top 20")
+
+kable(head(twitter.d2,20),caption = " Bigram Frequency - Top 20")
+
+kable(head(twitter.d3,20),caption = " Trigram Frequency - Top 20")
+
+kable(head(twitter.d4,20),caption = " Quadgram Frequency - Top 20")
+
+pal <- brewer.pal(6,"Dark2")
+pal <- pal[-(1)]
+wordcloud(twitter.d1$word, twitter.d1$freq,scale = c(4,0.4),colors =  pal,max.words = 300)
+
+wordcloud(twitter.d2$word, twitter.d2$freq,scale = c(4,0.4),colors =  pal,max.words = 100)
+
+wordcloud(twitter.d3$word, twitter.d3$freq,scale = c(3.5,0.4),min.freq=1,colors =  pal,max.words = 50)
+
+wordcloud(twitter.d4$word, twitter.d4$freq,scale = c(3,0.2),min.freq=1,colors =  pal,max.words = 35)
+
+```
