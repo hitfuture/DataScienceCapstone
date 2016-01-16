@@ -1,6 +1,6 @@
 library(tm)
 library(dplyr)
-library(RWeka)
+#library(RWeka)
 library(slam)
 library(testthat)
 library(RJSONIO)

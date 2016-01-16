@@ -1,5 +1,5 @@
 ---
-title: "TestModelBuild"
+title: "Good-Turing Model Build"
 author: "Brett Taylor"
 date: "January 10, 2016"
 output: pdf_document
@@ -30,7 +30,7 @@ newsTermMap<- buildTermMap("./data/en_US.news.valid.txt",keepApostrophe=TRUE)
 ```{r ngramCloud,warning=FALSE ,echo=FALSE,message=FALSE}
 options(mc.cores=1)
 
-   library(wordcloud) 
+library(wordcloud) 
 library(knitr)
 map <- c(twitterTermMap,blogsTermMap,newsTermMap)
 tdmap1  <- buildUnigramMap(map)
@@ -74,17 +74,19 @@ p <- ggplot(nfreq,aes(x=log10(freq),y=log10(n_r),color=type))+
 p
 ```
 
-```{r}
+##Good-Turing Smoothing
 
-nfreq.uni$gt <- computeGoodTuring(nfreq.uni,FALSE)
+```{r warning=FALSE ,echo=FALSE,message=FALSE}
+simple <- FALSE
+nfreq.uni$gt <- computeGoodTuring(nfreq.uni,simple)
 freq.uni<-left_join(ngram.d1,nfreq.uni,c("freq"="freq"))
-nfreq.bi$gt <- computeGoodTuring(nfreq.bi,FALSE)
+nfreq.bi$gt <- computeGoodTuring(nfreq.bi,simple)
 freq.bi<-left_join(ngram.d2,nfreq.bi,c("freq"="freq"))
 
-nfreq.tri$gt <- computeGoodTuring(nfreq.tri,FALSE)
+nfreq.tri$gt <- computeGoodTuring(nfreq.tri,simple)
 freq.tri<-left_join(ngram.d3,nfreq.tri,c("freq"="freq"))
 
-nfreq.quad$gt <- computeGoodTuring(nfreq.quad,FALSE)
+nfreq.quad$gt <- computeGoodTuring(nfreq.quad,simple)
 freq.quad<-left_join(ngram.d4,nfreq.quad,c("freq"="freq"))
 
 nfreq <- rbind(nfreq.uni,nfreq.bi,nfreq.tri,nfreq.quad)
@@ -99,11 +101,49 @@ p <- ggplot(nfreq,aes(x=log10(freq),y=log10(gt),color=type))+
 print(p)
 ```
 
+There is a problem here.   The issue is that the N_R (frequency of frequency) drops significantly.
+
+##Simple Good-Turing
+
+```{r warning=FALSE ,echo=FALSE,message=FALSE}
+nfreq.uni <- calc.nfreq(ngram.d1,type="uni")
+nfreq.bi  <- calc.nfreq(ngram.d2,type="bi")
+nfreq.tri <- calc.nfreq(ngram.d3,type="tri")
+nfreq.quad <- calc.nfreq(ngram.d4,type="quad")
+
+simple <- TRUE
+nfreq.uni$gt <- computeGoodTuring(nfreq.uni,simple)
+freq.uni<-left_join(ngram.d1,nfreq.uni,c("freq"="freq"))
+nfreq.bi$gt <- computeGoodTuring(nfreq.bi,simple)
+freq.bi<-left_join(ngram.d2,nfreq.bi,c("freq"="freq"))
+
+nfreq.tri$gt <- computeGoodTuring(nfreq.tri,simple)
+freq.tri<-left_join(ngram.d3,nfreq.tri,c("freq"="freq"))
+
+nfreq.quad$gt <- computeGoodTuring(nfreq.quad,simple)
+freq.quad<-left_join(ngram.d4,nfreq.quad,c("freq"="freq"))
+
+nfreq <- rbind(nfreq.uni,nfreq.bi,nfreq.tri,nfreq.quad)
+
+nfreq$type <- factor(nfreq$type,levels=c("uni","bi","tri","quad"),
+                     labels = c("unigram","bigram","trigram","quadgram"),
+                     ordered = TRUE)
+p <- ggplot(nfreq,aes(x=log10(freq),y=log10(gt),color=type))+
+        geom_point()+ 
+        theme_bw()+
+        facet_grid(type~.,as.table = TRUE)
+print(p)
+```
+
+
+There is a problem here.   The issue is that the N_R (frequency of frequency) drops significantly, and there is not continuity between the 2 solutions.
+
+
 \newpage
 ##Unigram
 
 
-```{r, echo=FALSE,fig.cap="Top 20 Unigrams"}
+```{r, echo=FALSE,warning=FALSE,message=FALSE,fig.cap="Top 20 Unigrams"}
 ngram.d1$word <- reorder(ngram.d1$word,ngram.d1$freq,rev)
 ggplot( head(ngram.d1,20), aes( x = log10(freq), y = word ,size = log(freq), color=log(freq))) + 
         geom_point(  ) + 
@@ -115,8 +155,8 @@ ggplot( head(ngram.d1,20), aes( x = log10(freq), y = word ,size = log(freq), col
                panel.grid.major.y = element_line( color ="grey60", linetype ="dashed"))
 ```
 
-```{r warning=FALSE,fig.cap= "Unigram Frequency"}
-kable(head(ngram.d1,20),caption = " Unigram Frequency - Top 20")
+```{r echo=FALSE, warning=FALSE,warning=FALSE,fig.cap= "Unigram Frequency"}
+#kable(head(ngram.d1,20),caption = " Unigram Frequency - Top 20")
 
 wordcloud(ngram.d1$word, ngram.d1$freq,scale = c(4,0.4),colors =  pal,max.words = 300)
 
@@ -127,7 +167,7 @@ wordcloud(ngram.d1$word, ngram.d1$freq,scale = c(4,0.4),colors =  pal,max.words 
 
 ##Bigram
 
-```{r, echo=FALSE,fig.cap="Top 20 Bigrams"}
+```{r, echo=FALSE,message=FALSE,warning=FALSE,fig.cap="Top 20 Bigrams"}
 ngram.d2$word <- reorder(ngram.d2$word,ngram.d2$freq,rev)
 ggplot( head(ngram.d2,20), aes( x = log10(freq), y = word ,size = log(freq), color=log(freq))) + 
         geom_point(  ) + 
@@ -140,8 +180,8 @@ ggplot( head(ngram.d2,20), aes( x = log10(freq), y = word ,size = log(freq), col
 ```
 
 
-```{r warning=FALSE,fig.cap= "Bigram Frequency"}
-kable(head(ngram.d2,20),caption = " Bigram Frequency - Top 20")
+```{r echo=FALSE, message=FALSE,warning=FALSE,fig.cap= "Bigram Frequency"}
+#kable(head(ngram.d2,20),caption = " Bigram Frequency - Top 20")
 
 wordcloud(ngram.d2$word, ngram.d2$freq,scale = c(4,0.4),colors =  pal,max.words = 300)
 
@@ -152,7 +192,7 @@ wordcloud(ngram.d2$word, ngram.d2$freq,scale = c(4,0.4),colors =  pal,max.words 
 
 ##Trigram
 
-```{r, echo=FALSE,fig.cap="Top 20 Trigrams"}
+```{r, echo=FALSE, message=FALSE,warning=FALSE, fig.cap="Top 20 Trigrams"}
 ngram.d3$word <- reorder(ngram.d3$word,ngram.d3$freq,rev)
 ggplot( head(ngram.d3,20), aes( x = log10(freq), y = word ,size = log(freq), color=log(freq))) + 
         geom_point(  ) + 
@@ -165,8 +205,8 @@ ggplot( head(ngram.d3,20), aes( x = log10(freq), y = word ,size = log(freq), col
 ```
 
 
-```{r warning=FALSE,fig.cap= "Trigram Frequency"}
-kable(head(ngram.d3,20),caption = " Trigram Frequency - Top 20")
+```{r echo=FALSE, message=FALSE,warning=FALSE,fig.cap= "Trigram Frequency"}
+#kable(head(ngram.d3,20),caption = " Trigram Frequency - Top 20")
 
 wordcloud(ngram.d3$word, ngram.d3$freq,scale = c(4,0.4),colors =  pal,max.words = 300)
 
@@ -177,7 +217,7 @@ wordcloud(ngram.d3$word, ngram.d3$freq,scale = c(4,0.4),colors =  pal,max.words 
 
 ##Quadgram
 
-```{r, echo=FALSE,fig.cap="Top 20 Quadragrams"}
+```{r, echo=FALSE,message=FALSE, warning=FALSE, fig.cap="Top 20 Quadragrams"}
 ngram.d4$word <- reorder(ngram.d4$word,ngram.d4$freq,rev)
 ggplot( head(ngram.d4,20), aes( x = log10(freq), y = word ,size = log(freq), color=log(freq))) + 
         geom_point(  ) + 
@@ -189,10 +229,10 @@ ggplot( head(ngram.d4,20), aes( x = log10(freq), y = word ,size = log(freq), col
                panel.grid.major.y = element_line( color ="grey60", linetype ="dashed"))
 ```
 
-```{r warning=FALSE,fig.cap= "Quadragram Frequency"}
-kable(head(ngram.d4,20),caption = " Quadragram Frequency - Top 20")
+```{r echo=FALSE,warning=FALSE, warning=FALSE,fig.cap= "Quadragram Frequency"}
+#kable(head(ngram.d4,20),caption = " Quadragram Frequency - Top 20")
 
-wordcloud(ngram.d4$word, ngram.d4$freq,scale = c(4,0.4),colors =  pal,max.words = 300)
+wordcloud(ngram.d4$word, ngram.d4$freq,scale = c(2.5,0.3),colors =  pal,max.words = 75)
 
 
 ```
