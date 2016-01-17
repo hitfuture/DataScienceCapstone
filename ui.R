@@ -46,9 +46,9 @@ body <-  dashboardBody(
                         fluidRow(
                                 box(title = "Text Submission",
                                     
-                                    textInput("textEntry",label="Enter Text",width = "50%"),
-                                    actionButton("submitText","Predict!",icon = icon("star")), 
-                                    color="blue",width = 12)
+                                    column(6,textInput("textEntry",label="Enter Text",width = "100%")),
+                                        column(2,actionButton("submitText","Predict!",icon = icon("star"))), 
+                                    color="blue",width = 8)
                         
                         ),
                         fluidRow(

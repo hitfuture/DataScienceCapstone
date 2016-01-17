@@ -40,7 +40,7 @@ messageData <- data.frame(from=c("brettt@slhs.org","wilfordtr@slhs.org"),message
 function(input, output,session) {
         print(session)
    #Reactive Functions
-        autoInvalidate <- reactiveTimer(1000,session = session)
+        autoInvalidate <- reactiveTimer(3000,session = session)
 observe({
         autoInvalidate()
 })
@@ -105,7 +105,7 @@ predictedWords <- reactive({
          infoBox("R Memory", humanReadable(mem_used(),standard="SI"), subtitle="Delta",icon = icon("arrow-up"),color = "red" ,width = 3)
  })
  output$predictInfo <- renderInfoBox({
-          infoBox("Prediction Info", paste(round(performanceValues$predict.time["elapsed"],2), "sec"), subtitle="Average",icon = icon("arrow-up"),color = "red" ,width = 3)
+          infoBox("Performance", paste(round(performanceValues$predict.time["elapsed"],2), "sec"), subtitle="Average",icon = icon("arrow-up"),color = "red" ,width = 3)
  })
  output$textPredictionOut <- renderText({
          predictedWords()
