@@ -1,0 +1,26 @@
+install.packages(("ggplot2"))
+install.packages("pryr")
+install.packages("devtools")
+devtools::install_github("hadley/lineprof")
+library(ggplot2)
+library(pryr)
+library(devtools)
+library(lineprof)
+
+#Optimize
+#(Use object_size() instead of object.size()
+#This function is better than the built-in object.size() because it accounts 
+#for shared elements within an object and includes the size of environments.)
+
+mem_used()
+ngram.d1$word <- as.character(ngram.d1$word)
+object_size(ngram.d1)
+object.size(ngram.d1)
+mem_change(ngram.d1$word <- as.factor(ngram.d1$word))
+object_size(ngram.d1)
+object.size(ngram.d1)
+
+mem_change(ngram.d1$w_0 <- ngram.d1$word)
+object_size(ngram.d1)
+object.size(ngram.d1)
+ 
