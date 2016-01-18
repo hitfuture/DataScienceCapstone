@@ -1,11 +1,14 @@
 #TextPredictor class
 #Utilize the RC Class model to create several types of TextPredictors
-
+library(data.table)
 TextPredictor <- setRefClass("TextPredictor",
                        fields = c("source"),
                        methods = list(
                                predictNextWord = function(phrase) {
                                        return("<Unknown>")
+                               },
+                               cleanPhrase = function(phrase) {
+                                       tolower(phrase)
                                }
                        )
 )
@@ -13,7 +16,14 @@ TextPredictor$accessors(c("source"))
 #Abstract subclass NGramPredictor handles maintaining the NGram lists
 NGramPredictor <- setRefClass("NGramPredictor",
                              contains = "TextPredictor",
-                             fields = c("ngrams")
+                             fields = c("ngrams"),
+                        methods = list(
+                                predictNextWord = function(phrase) {
+                                      gram4 <-  (.self$getSource())$getQuadGram()
+                                     print(gram4)  
+                                     return(phrase)
+                                }
+                        )
                              )
 NGramPredictor$accessors(c("ngrams"))
 
@@ -27,7 +37,29 @@ NGramPredictor$accessors(c("ngrams"))
 NGram <- setRefClass("NGram",
                      fields = c("data"),
                      methods = list(
-                             prune = function() {stop("The class does not have prune method defined")}
+                             prune = function() {stop("The class does not have prune method defined")},
+                             restoreFrom = function(file) {
+                                    data <<-  fread(file,header = TRUE,verbose = TRUE,showProgress = TRUE)
+                             },
+                             saveToContainer = function(aContainer) {
+                                     aContainer$setNGram(.self$ngramPrefix(),.self)
+                             },
+                             fileName = function() {fileName <- paste("./data/",.self$ngramPrefix(),"term","freq.csv",sep = "")},
+                             restore = function() {
+                                   .self$restoreFrom(.self$fileName())  
+                             },
+                             ngramPrefix = function() "ngram",
+                             
+                             saveTo = function(file) {
+                                     write.csv(data,file,row.names = FALSE,na = "")
+                             },
+                             save = function() {
+                                    if(!file.exists("./data")){
+                                            dir.create("./data")
+                                    }
+                                     
+                                     .self$saveTo(.self$fileName())
+                             }
                              
                      ))
 NGram$accessors(c("data"))
@@ -36,6 +68,7 @@ UniGram <- setRefClass("UniGram",
                       contains = "NGram",
                      fields = list(),
                      methods = list(
+                             ngramPrefix = function() "unigram",
                              getParent = function() {NULL}
                              
                      ))
@@ -51,18 +84,28 @@ BiGram <- setRefClass("BiGram",
                       contains = "TwoPlusGram",
                       fields = list(),
                       methods = list(
+                              ngramPrefix = function() "bigram",
+                              prune = function() {
+                                      
+                              }
                               
                       ))
 TriGram <- setRefClass("TriGram",
                       contains = "TwoPlusGram",
                       fields = list(),
                       methods = list(
+                         ngramPrefix = function() "trigram",
                               
+                         prune = function(){
+                                 
+                         }     
                       ))
 QuadGram <- setRefClass("QuadGram",
                        contains = "TwoPlusGram",
                        fields = list(),
                        methods = list(
+                               ngramPrefix = function() "quadgram"
+                               
                                
                        ))
 #NGramContainer class is responsible for adding in all of the various N-Grams, storing, and processing them.   
@@ -71,48 +114,60 @@ NGramContainer <- setRefClass("NGramContainer",
                               fields=list(ngrams="list"),
                               methods = list(
                                       setUniGram = function(ngram) {
-                                              ngrams["uniGram"]<<-ngram
+                                              ngrams["unigram"]<<-ngram
                                       },
                                       setBiGram = function(ngram) {
-                                              ngrams["biGram"]<<-ngram
+                                              ngrams["bigram"]<<-ngram
                                       },
-                                      setTriGram = function(ngram) {
-                                              ngrams["triGram"]<<-ngram
+                                       setTriGram = function(ngram) {
+                                              ngrams["trigram"]<<-ngram
                                       },
                                       setQuadGram = function(ngram) {
-                                              ngrams["quadGram"]<<-ngram
+                                              ngrams["quadgram"]<<-ngram
+                                      },
+                                      setNGram = function(ngramType, anNGram ) {
+                                              ngrams[ngramType] <<-anNGram
                                       },
                                       #Getters   
-                                      getUniGram = function(){ngrams[["uniGram"]]},
-                                      getBiGram = function(){ngrams[["biGram"]]},
-                                      getTriGram = function(){ngrams[["triGram"]]},
-                                      getQuadGram = function(){ngrams[["quadGram"]]}
-                                      
+                                      getUniGram = function(){ngrams[["unigram"]]},
+                                      getBiGram = function(){ngrams[["bigram"]]},
+                                      getTriGram = function(){ngrams[["trigram"]]},
+                                      getQuadGram = function(){ngrams[["quadgram"]]},
+                                      getNGram = function(name){ngrams[[name]]},
+                                      ngramInstance =function(ngramType) {
+                                              if(ngramType == "unigram") return(UniGram$new())
+                                              if(ngramType == "bigram") return(BiGram$new())
+                                              if(ngramType == "trigram") return(TriGram$new())
+                                              if(ngramType == "quadgram") return(QuadGram$new())
+                                              NGram$new()
+                                              
+                                              
+                                      },
+                                      getNGramInstances = function(){
+                                              .self$clear()
+                                              for(n in getNGramTypes()){
+                                                      ng <-.self$ngramInstance(n)
+                                                      .self$setNGram(n,ng)
+                                              }
+                                              ngrams
+                                      },
+                                      clear = function() {
+                                              ngrams <<- list()
+                                      },
+                                      save = function() {
+                                             for(ng in ngrams) {
+                                                     ng$save()
+                                             }
+                                      },
+                                      getNGramTypes = function() {
+                                              c("unigram","bigram","trigram","quadgram")
+                                      },
+                                      restore = function() {
+                                              for(ng in .self$getNGramInstances()) {
+                                                      ng$restore()
+                                              }
+                                      }
+                                     
                                       
                                       
                               ))
-uni <- UniGram$new(data=freq.uni)
-
-uni$getParent()
-bi <- BiGram$new(data=freq.bi,parent=uni)
-bi$getParent()
- 
-tri <- TriGram$new(data=freq.tri,parent=bi)
-tri$getParent()
-quad <- QuadGram$new(data=freq.quad,parent=tri)
-quad
-container <- NGramContainer$new()
-container$setUniGram(uni)
-container$setBiGram(bi)
-container$setTriGram(tri)
-container$setQuadGram(quad)
-container
-#Examples
-predict1 <- TextPredictor$new(source=container)
-predict1$predictNextWord("This is a test")
-
-predictNgram <- NGramPredictor$new(source=container)
-predictNgram$setNgrams(list(uni=freq.uni,bi=freq.tri,tri=freq.tri,quad=freq.quad))
-predictNgram$getNgrams()
-predictNgram$getSource()
-predictNgram$predictNextWord("this is the word")
