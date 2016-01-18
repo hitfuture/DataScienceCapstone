@@ -101,7 +101,8 @@ newsTermMap<- buildTermMap("./data/en_US.news.train.txt")
 
 ```
 
-
+###What to capitalize
+[Capitalization Opportunities](http://libraryonline.com/?pID=48)
 
 ## Building the Model
 One of the ways we are building the predictive model is to create n-gram matricies that are used to compute the probability that a word will follow 1 or more documents.
@@ -156,7 +157,7 @@ pal <- pal[-(1)]
 top20 <- head(frequencyUnigramDF,20)
 
 
-ggplot( top20, aes( x = freq, y = reorder( word, freq))) + 
+ggplot( top20, aes( x = log10(freq), y = reorder( word, freq))) + 
         geom_point( size = 3) + 
         theme_bw() + 
         theme( panel.grid.major.x = element_blank(), 
@@ -209,15 +210,15 @@ ggplot( top20, aes( x = freq, y = reorder( word, freq))) +
 
 ```{r exploreBigramCloud, eval=FALSE, echo=FALSE}
 
-wordcloud(frequencyBigramDF$word, frequencyUnigramDF$freq,scale = c(6,.6),colors =  pal,max.words = 300)
+wordcloud(frequencyBigramDF$word, frequencyBigramDF$freq,scale = c(6,.6),colors =  pal,max.words = 300)
 
 ```
 ![cloudMapBi](figures/bigram-cloud.png)
 
 
 ```{r exploreBigramDataFreq, echo=FALSE}
-unifreq <- read.csv("./data/freq_bigram.csv",nrows = 10)
-kable(unifreq,caption = "Bigram frequency and probablity data")
+freq <- read.csv("./data/freq_bigram.csv",nrows = 10)
+kable(freq,caption = "Bigram frequency and probablity data")
 ```
 
 ###Quadgram (4)

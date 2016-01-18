@@ -1,6 +1,8 @@
 #TextPredictor class
 #Utilize the RC Class model to create several types of TextPredictors
 library(data.table)
+library(tm)
+library(dplyr)
 TextPredictor <- setRefClass("TextPredictor",
                        fields = c("source"),
                        methods = list(
@@ -18,10 +20,10 @@ NGramPredictor <- setRefClass("NGramPredictor",
                              contains = "TextPredictor",
                              fields = c("ngrams"),
                         methods = list(
+                                
                                 predictNextWord = function(phrase) {
                                       gram4 <-  (.self$getSource())$getQuadGram()
-                                     print(gram4)  
-                                     return(phrase)
+                                      return(phrase)
                                 }
                         )
                              )
@@ -41,7 +43,7 @@ NGram <- setRefClass("NGram",
                              restoreFrom = function(file) {
                                     data <<-  fread(file,header = TRUE,verbose = TRUE,showProgress = TRUE)
                              },
-                             saveToContainer = function(aContainer) {
+                             addToContainer = function(aContainer) {
                                      aContainer$setNGram(.self$ngramPrefix(),.self)
                              },
                              fileName = function() {fileName <- paste("./data/",.self$ngramPrefix(),"term","freq.csv",sep = "")},
@@ -69,7 +71,12 @@ UniGram <- setRefClass("UniGram",
                      fields = list(),
                      methods = list(
                              ngramPrefix = function() "unigram",
-                             getParent = function() {NULL}
+                             getParent = function() {NULL},
+                             find = function(terms) {
+                                    term <- last(terms)
+                                    data%>%filter(w_0 == term)
+                                     
+                             }
                              
                      ))
 #Abstract class that knows it has a parent
@@ -87,6 +94,10 @@ BiGram <- setRefClass("BiGram",
                               ngramPrefix = function() "bigram",
                               prune = function() {
                                       
+                              } ,
+                              find = function(terms) {
+                                      lterms <- last(terms,1)
+                                      data%>%filter((w_1==lterms[1]))
                               }
                               
                       ))
@@ -98,13 +109,22 @@ TriGram <- setRefClass("TriGram",
                               
                          prune = function(){
                                  
-                         }     
+                         }    ,
+                         find = function(terms) {
+                                 lterms <- last(terms,2)
+                                 data%>%filter(w_2==lterms[1]&(w_1==lterms[2]))
+                         }
                       ))
-QuadGram <- setRefClass("QuadGram",
+
+QuadGram <- setRefClass("QuadGram",  
                        contains = "TwoPlusGram",
-                       fields = list(),
-                       methods = list(
-                               ngramPrefix = function() "quadgram"
+                       fields = list(), 
+                       methods = list( 
+                               ngramPrefix = function() "quadgram",
+                               find = function(terms) {
+                                       lterms <- last(terms,3)
+                                       data%>%filter(w_3==lterms[1]&(w_2==lterms[2])&(w_1==lterms[3]))
+                               }
                                
                                
                        ))

@@ -59,7 +59,7 @@ calc.nrz.estimate <- function(data){
         xN <- sum(xr * xnr)
         
         #make averaging transform
-        xnrz <- nrzest(xr,xnr)
+        xnrz <- calc.nrz.estimate(data)
          
         #get Linear Good-Turing estimate
         xf <- lsfit(log(xr),log(xnrz))

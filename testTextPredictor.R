@@ -17,16 +17,31 @@ is.null(bi$getData() )
 tri <- TriGram$new(data=freq.tri,parent=bi)
 tri$getParent()
 quad <- QuadGram$new(data=freq.quad,parent=tri)
-quad
+
 container <- NGramContainer$new()
-container$setUniGram(uni)
-container$setBiGram(bi)
-container$setTriGram(tri)
-container$setQuadGram(quad)
+expect_equal(length(container$ngrams),0)
+uni$addToContainer(container)
+expect_equal(length(container$ngrams),1)
+
+bi$addToContainer(container)
+expect_equal(length(container$ngrams),2)
+#Add it twice
+bi$addToContainer(container)
+expect_equal(length(container$ngrams),2)
+
+tri$addToContainer(container)
+expect_equal(length(container$ngrams),3)
+
+quad$addToContainer(container)
+expect_equal(length(container$ngrams),4)
+
+
 container$save()
 container$clear()
-length(container$ngrams) == 0
+expect_equal(length(container$ngrams) , 0)
 container$restore()
+expect_equal(length(container$ngrams) , 4)
+
 #Examples
 predict1 <- TextPredictor$new(source=container)
 predict1$predictNextWord("This is a test")
