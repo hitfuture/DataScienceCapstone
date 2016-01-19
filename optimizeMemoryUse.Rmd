@@ -19,6 +19,8 @@ library(lineprof)
 This function is better than the built-in object.size() because it accounts 
 for shared elements within an object and includes the size of environments.)
 How much memobry is in use
+
+http://shiny.rstudio.com/articles/scaling-and-tuning.html
 ```{r}
 mem_used()
 ````

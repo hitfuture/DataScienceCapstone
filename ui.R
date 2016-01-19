@@ -29,10 +29,7 @@ sidebar <-         dashboardSidebar(
 )
  
 body <-  dashboardBody(
-        tags$head(
-                tags$link(rel = "stylesheet", type = "text/css", 
-                          href = "https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.cs")
-        ),
+      
         tabItems(
                 tabItem(tabName = "predict",
                         fluidRow(infoBoxOutput("memInfo",width = 3),
@@ -52,7 +49,10 @@ body <-  dashboardBody(
                         
                         ),
                         fluidRow(
-                                box(title = "Text Prediction",textOutput("textPredictionOut"),width = 12) 
+                                box(title = "Text Prediction",textOutput("textPredictionOut"),width = 12
+                                    ) 
+                                ),
+                        fluidRow( box(title="Prediciton Results",   DT::dataTableOutput("predictResults") ,width=12)
                         )
                 ),
                 tabItem(tabName = "config",

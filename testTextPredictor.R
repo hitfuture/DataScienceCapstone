@@ -1,25 +1,16 @@
 #Test the TextPredictor classes
 
 uni <- UniGram$new(data=freq.uni)
-uni$save()
-uni$setData(NULL) 
-uni$restore()
-uni$data
-uni$getParent()
+ 
 bi <- BiGram$new(data=freq.bi,parent=uni)
-bi$getParent()
-bi$save() 
-bi$setData(NULL)
-is.null(bi$getData() )
-bi$restore()
-is.null(bi$getData() )
-
+ 
 tri <- TriGram$new(data=freq.tri,parent=bi)
-tri$getParent()
+
 quad <- QuadGram$new(data=freq.quad,parent=tri)
 
 container <- NGramContainer$new()
 expect_equal(length(container$ngrams),0)
+
 uni$addToContainer(container)
 expect_equal(length(container$ngrams),1)
 
@@ -35,8 +26,10 @@ expect_equal(length(container$ngrams),3)
 quad$addToContainer(container)
 expect_equal(length(container$ngrams),4)
 
-
-container$save()
+uni$getDir()
+uni$data
+container$save(dir = "./data/archive/")
+container$compress()
 container$clear()
 expect_equal(length(container$ngrams) , 0)
 container$restore()
@@ -47,7 +40,14 @@ predict1 <- TextPredictor$new(source=container)
 predict1$predictNextWord("This is a test")
 
 predictNgram <- NGramPredictor$new(source=container)
-predictNgram$setNgrams(list(uni=freq.uni,bi=freq.tri,tri=freq.tri,quad=freq.quad))
 predictNgram$getNgrams()
 predictNgram$getSource()
 predictNgram$predictNextWord("this is the word")
+predictNgram$predictNextWord("this is the")
+predictNgram$predictNextWord("I'm very")
+predictNgram$predictNextWord("at the end")
+answer <- predictNgram$predictNextWord("the end of")
+predictNgram$predictNextWord("thanks for the")
+predictNgram$predictNextWord("by the end")
+predictNgram$predictNextWord("the end of the day i don't have to be a great resource simple")
+predictNgram$predictNextWord("by the")

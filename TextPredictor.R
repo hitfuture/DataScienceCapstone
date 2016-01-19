@@ -3,6 +3,8 @@
 library(data.table)
 library(tm)
 library(dplyr)
+library(digest)
+source('buildModel.R')
 TextPredictor <- setRefClass("TextPredictor",
                        fields = c("source"),
                        methods = list(
@@ -20,11 +22,18 @@ NGramPredictor <- setRefClass("NGramPredictor",
                              contains = "TextPredictor",
                              fields = c("ngrams"),
                         methods = list(
-                                
+                                asTerms = function(phrase) {
+                                        phrase <- tolower(phrase)
+                                        phrase <- removePunctuationAndNumbers(phrase)
+                                        terms <- strsplit(phrase,split = " ")
+                                        unlist(terms)
+                                },
                                 predictNextWord = function(phrase) {
-                                      gram4 <-  (.self$getSource())$getQuadGram()
-                                      return(phrase)
-                                }
+                                      terms <- .self$asTerms(phrase) 
+                                      message(paste("Terms:",terms))
+                                      result <- source$find(terms)
+                                      return(result)
+                                 }
                         )
                              )
 NGramPredictor$accessors(c("ngrams"))
@@ -37,16 +46,26 @@ NGramPredictor$accessors(c("ngrams"))
 #I think I will encapsulate the data.table in the instance of the class.  This may change over time
 
 NGram <- setRefClass("NGram",
-                     fields = c("data"),
+                     fields = c("data","dir","isCompressed" ,"isPruned"),
                      methods = list(
+                             initialize = function(...,dir="./data/") {
+                                     dir <<-dir
+                                     isCompressed <<- FALSE
+                                     isPruned <<- FALSE
+                                     callSuper(...)
+                             },
                              prune = function() {stop("The class does not have prune method defined")},
+                             compress = function() {
+                                     #This function  reduces the number of fields in the NGram data.table, and will also 
+                                     # use a hash to convert text statements into numeric values.
+                                     stop("The class does not have compress method defined")},
                              restoreFrom = function(file) {
                                     data <<-  fread(file,header = TRUE,verbose = TRUE,showProgress = TRUE)
                              },
                              addToContainer = function(aContainer) {
                                      aContainer$setNGram(.self$ngramPrefix(),.self)
                              },
-                             fileName = function() {fileName <- paste("./data/",.self$ngramPrefix(),"term","freq.csv",sep = "")},
+                             fileName = function() {fileName <- paste(.self$getDir(),.self$ngramPrefix(),"term","freq.csv",sep = "")},
                              restore = function() {
                                    .self$restoreFrom(.self$fileName())  
                              },
@@ -56,15 +75,15 @@ NGram <- setRefClass("NGram",
                                      write.csv(data,file,row.names = FALSE,na = "")
                              },
                              save = function() {
-                                    if(!file.exists("./data")){
-                                            dir.create("./data")
+                                    if(!file.exists(.self$getDir())){
+                                            dir.create(.self$getDir())
                                     }
                                      
                                      .self$saveTo(.self$fileName())
                              }
                              
                      ))
-NGram$accessors(c("data"))
+NGram$accessors(c("data","dir"))
 #UniGram does not have a parent.  It is the keeper of the words
 UniGram <- setRefClass("UniGram",
                       contains = "NGram",
@@ -133,6 +152,9 @@ QuadGram <- setRefClass("QuadGram",
 NGramContainer <- setRefClass("NGramContainer",
                               fields=list(ngrams="list"),
                               methods = list(
+                                      prune = function() {stop("The class does not have prune method defined")},
+                                      compress = function() {stop("The class does not have compress method defined")},
+                                      
                                       setUniGram = function(ngram) {
                                               ngrams["unigram"]<<-ngram
                                       },
@@ -174,17 +196,31 @@ NGramContainer <- setRefClass("NGramContainer",
                                       clear = function() {
                                               ngrams <<- list()
                                       },
-                                      save = function() {
+                                      save = function(dir="./data/") {
                                              for(ng in ngrams) {
+                                                     ng$setDir(dir)
                                                      ng$save()
                                              }
                                       },
                                       getNGramTypes = function() {
                                               c("unigram","bigram","trigram","quadgram")
                                       },
-                                      restore = function() {
+                                      restore = function(dir="./data/") {
                                               for(ng in .self$getNGramInstances()) {
+                                                      ng$setDir(dir)
                                                       ng$restore()
+                                              }
+                                        
+                                      },
+                                      find = function(terms){
+                                              lstN <- min(length(terms)+1,4)
+                                              ngs <- .self$ngrams[lstN:1]
+                                              for(ng in ngs) { 
+                                                      results <- ng$find(terms)
+                                                      if(nrow(results)>0) {
+                                                            return(arrange(results,desc(freq)))
+                                                      }    
+                                                      
                                               }
                                       }
                                      

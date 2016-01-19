@@ -16,9 +16,9 @@ curseStops  <- names(fromJSON("./data/google_twunter_lol.json"))
 
 
 
-blogsTermMap <- buildTermMap("./data/en_US.blogs.valid.txt",keepApostrophe=TRUE)
-twitterTermMap<- buildTermMap("./data/en_US.twitter.valid.txt",keepApostrophe=TRUE)
-newsTermMap<- buildTermMap("./data/en_US.news.valid.txt",keepApostrophe=TRUE)
+blogsTermMap <- buildTermMap("./data/en_US.blogs.train.txt",keepApostrophe=TRUE)
+twitterTermMap<- buildTermMap("./data/en_US.twitter.train.txt",keepApostrophe=TRUE)
+newsTermMap<- buildTermMap("./data/en_US.news.train.txt",keepApostrophe=TRUE)
 
 
 ```
@@ -33,6 +33,10 @@ options(mc.cores=1)
 library(wordcloud) 
 library(knitr)
 map <- c(twitterTermMap,blogsTermMap,newsTermMap)
+twitterTermMap <- NULL
+blogsTermMap <- NULL
+newsTermMap <- NULL
+
 tdmap1  <- buildUnigramMap(map)
 tdmap2  <- buildBigramMap(map)
 tdmap3 <- buildTrigramMap(map)
@@ -122,7 +126,10 @@ freq.tri<-left_join(ngram.d3,nfreq.tri,c("freq"="freq"))
 
 nfreq.quad$gt <- computeGoodTuring(nfreq.quad,simple)
 freq.quad<-left_join(ngram.d4,nfreq.quad,c("freq"="freq"))
-
+write.csv(freq.uni,"./data/store/unigramtermfreq.csv",row.names = FALSE)
+write.csv(freq.bi,"./data/store/bigramtermfreqi.csv",row.names = FALSE)
+write.csv(freq.tri,"./data/store/trigramtermfreq.csv",row.names = FALSE)
+write.csv(freq.quad,"./data/store/quadgramtermfreq.csv",row.names = FALSE)
 nfreq <- rbind(nfreq.uni,nfreq.bi,nfreq.tri,nfreq.quad)
 
 nfreq$type <- factor(nfreq$type,levels=c("uni","bi","tri","quad"),

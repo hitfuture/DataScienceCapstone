@@ -10,7 +10,13 @@ Sys.setenv(NOAWT = TRUE)
 curseStops  <- names(fromJSON("./data/google_twunter_lol.json"))
 curseCorp <- VCorpus(VectorSource(curseStops))
 delims <- " \\t\\r\\n.!?,;\"()"
-
+removePunctuationAndNumbers <- function(x) {
+        y <- gsub("[^[:alnum:][:space:]']","", x)
+        z <- sub("^'","",y)
+        gsub(" ('|`)","",z)
+        
+        
+}
 
 buildTermMap <- function(fileName,keepApostrophe = TRUE) {
         runModel({
@@ -34,13 +40,7 @@ buildTermMap <- function(fileName,keepApostrophe = TRUE) {
                 removeWords(x, curseStops)
         as.lower <- function(x)
                 content_transformer(tolower)
-        removePunctuationAndNumbers <- function(x) {
-                y <- gsub("[^[:alnum:][:space:]']","", x)
-                z <- sub("^'","",y)
-                gsub(" ('|`)","",z)
-                
-                
-        }
+        
         removeHashTags <- function(x) {
                 gsub("#\\S+","", x)
         }
