@@ -14,18 +14,24 @@ library(shiny)
 library(shinydashboard)
 library(DT)
 require(rCharts)
+
 library(pryr)
 library(lineprof)
 #options(RCHART_LIB = 'polycharts')
 
 
-sidebar <-         dashboardSidebar(
-        headerPanel("Text Prediction")  ,
+
+sidebar <-   dashboardSidebar(
+        headerPanel("Word\n Predictor")  ,
         sidebarMenu(
-                menuItem("Predict", tabName = "predict",icon = icon("cloud")),
+                menuItem("Predict", tabName = "predict",icon = icon("dashboard")),
                 menuItem("Configuration", tabName = "config",icon = icon("setting")),
-                menuItem("Help", tabName = "help", icon = icon("question-circle"))
-        ) 
+                menuItem("Help", tabName = "help", icon = icon("question-circle"),
+                                 badgeLabel = "new", badgeColor = "green")
+                
+                ) 
+         ,
+        h1("Information")
 )
  
 body <-  dashboardBody(
@@ -77,23 +83,7 @@ dashboardPage(
         dashboardHeader(title = "Data Science Capstone",
                         dropdownMenuOutput("messageMenu"),
                         dropdownMenuOutput("taskMenu"),
-                        
-                        dropdownMenu(
-                                type = "notifications",
-                                notificationItem(
-                                        text = "5 new users today",
-                                        icon("users")
-                                ),
-                                notificationItem(
-                                        text = "12 items delivered",
-                                        icon("truck"),
-                                        status = "success"
-                                ),
-                                notificationItem(
-                                        text = "Server load at 86%",
-                                        icon = icon("exclamation-triangle"),
-                                        status = "warning"
-                                )
-                        )),
+                        dropdownMenuOutput("notificationMenu")
+                        ),
         sidebar,
         body)

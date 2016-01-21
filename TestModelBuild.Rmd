@@ -10,7 +10,7 @@ library(RJSONIO)
 library(ggplot2)
 library(data.table)
 source("runModel.R")
-source("buildModel.R")
+source("buildModel.R")data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAkAAAAJCAYAAADgkQYQAAAAMElEQVR42mNgIAXY2Nj8x8cHC8AwMl9XVxe3QqwKcJmIVwFWhehW4LQSXQCnm3ABAHD6MDrmRgfrAAAAAElFTkSuQmCC
 source("goodTuring.R")
 curseStops  <- names(fromJSON("./data/google_twunter_lol.json"))
 

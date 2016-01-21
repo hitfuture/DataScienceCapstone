@@ -17,19 +17,19 @@ source("TextPredictor.R")
 
 #This is the data source
 container <- NGramContainer$new()
-container$restore()  #Load the data from the file system.
+container$restore("./data/store2/")  #Load the data from the file system.
 
 messageData <-
         data.frame(
-                from = c("brettt@slhs.org","wilfordtr@slhs.org"),message = c("Hey!","What?")
+                from = c("brett.r.taylor@me.com","wilfordtr@slhs.org"),message = c("Hey!","What?")
         )
 
 
 
 function(input, output,session) {
-        print(session)
+       # print(session)
         predictor <- NGramPredictor$new(source=container) #This predictor is specific to the user
-        autoInvalidate <- reactiveTimer(3000,session = session)
+        autoInvalidate <- reactiveTimer(5000,session = session)
 #         observe({
 #                 autoInvalidate()
 #         })
@@ -69,7 +69,8 @@ function(input, output,session) {
         output$memInfo <- renderInfoBox({
                 autoInvalidate()
                 infoBox(
-                        "R Memory", humanReadable(mem_used(),standard = "SI"), subtitle = "Delta",icon = icon("arrow-up"),color = "red" ,width = 3
+                        "R Memory", humanReadable(mem_used(),standard = "SI"),
+                        subtitle = "Delta",icon = icon("arrow-up"),color = "red" ,width = 3
                 )
         })
         output$predictInfo <- renderInfoBox({
