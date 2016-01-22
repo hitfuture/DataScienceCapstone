@@ -74,7 +74,12 @@ container <- NGramContainer$new()
 container$restore(dir = "./data/store/")
 container$compress()
 container$prune()
-container$save(dir ="./data/store2/")
+container$saveDataObject(dir ="./data/store2/")
+container$clear()
+expect_equal(length(container$ngrams) , 0)
+
+container$restoreDataObject(dir ="./data/store2/")
+expect_equal(length(container$ngrams) , 4)
 
 predictNgram <- NGramPredictor$new(source=container)
 

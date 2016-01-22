@@ -22,7 +22,7 @@ TextPredictor$accessors(c("source"))
 NGramPredictor <- setRefClass(
         "NGramPredictor",
         contains = "TextPredictor",
-        fields = c("ngrams"),
+        fields = c("ngrams","gramsUsed"),
         methods = list(
                 asTerms = function(phrase) {
                         phrase <- tolower(phrase)
@@ -75,15 +75,22 @@ NGram <- setRefClass(
                                         file,header = TRUE,verbose = TRUE,showProgress = TRUE
                                 )
                 },
+                restoreDataObjectFrom = function(file) {
+                        data <<- readRDS(file)
+                                 
+                }, 
                 addToContainer = function(aContainer) {
                         aContainer$setNGram(.self$ngramPrefix(),.self)
                 },
-                fileName = function() {
+                fileName = function(ext=".csv") {
                         fileName <-
-                                paste(.self$getDir(),.self$ngramPrefix(),"term","freq.csv",sep = "")
+                                paste(.self$getDir(),.self$ngramPrefix(),"term","freq",ext,sep = "")
                 },
                 restore = function() {
                         .self$restoreFrom(.self$fileName())
+                },
+                restoreDataObject = function() {
+                        .self$restoreDataObjectFrom(.self$fileName(ext=".rds"))
                 },
                 ngramPrefix = function()
                         "ngram",
@@ -97,6 +104,15 @@ NGram <- setRefClass(
                         }
                         
                         .self$saveTo(.self$fileName())
+                },
+                saveDataObjectTo= function(file){
+                        saveRDS(data,file = file)
+                },
+                saveDataObject = function() {
+                        if (!file.exists(.self$getDir())) {
+                                dir.create(.self$getDir())
+                        }
+                        saveDataObjectTo(.self$fileName(ext=".rds"))
                 }
         )
 )
@@ -132,6 +148,14 @@ UniGram <- setRefClass(
                         }
                         
                         
+                },
+                restoreDataObject = function(...) {
+                        callSuper(...)
+                        if (ncol(data) <= 4) {
+                                isCompressed <<- TRUE
+                        }
+                        
+                        
                 }
                 
         )
@@ -141,7 +165,14 @@ TwoPlusGram <- setRefClass(
         "TwoPlusGram",
         contains = "NGram",
         fields = list(parent = "NGram"),
-        methods = list()
+        methods = list( restoreDataObject = function(...) {
+                callSuper(...)
+                if (ncol(data) <= 5) {
+                        isCompressed <<- TRUE
+                }
+                
+                
+        })
 )
 TwoPlusGram$accessors(c("parent"))
 BiGram <- setRefClass(
@@ -182,6 +213,7 @@ BiGram <- setRefClass(
                         
                         
                 }
+               
                 
         )
 )
@@ -336,6 +368,12 @@ NGramContainer <- setRefClass(
                                 ng$save()
                         }
                 },
+                saveDataObject = function(dir = "./data/") {
+                        for (ng in ngrams) {
+                                ng$setDir(dir)
+                                ng$saveDataObject()
+                        }
+                },
                 getNGramTypes = function() {
                         c("unigram","bigram","trigram","quadgram")
                 },
@@ -346,6 +384,13 @@ NGramContainer <- setRefClass(
                         }
                         
                 },
+                restoreDataObject = function(dir = "./data/") {
+                        for (ng in .self$getNGramInstances()) {
+                                ng$setDir(dir)
+                                ng$restoreDataObject()
+                        }
+                        
+                },
                 find = function(terms) {
                         lstN <- min(length(terms) + 1,4)
                         ngs <-.self$ngrams[lstN:1]
@@ -353,7 +398,8 @@ NGramContainer <- setRefClass(
                                 results <- ng$find(terms)
                                 if (nrow(results) >
                                     0) {
-                                        return(arrange(results,desc(freq)))
+                                        return(list(ngram=ng,
+                                                data=arrange(results,desc(freq))))
                                 }
                                 
                         }
