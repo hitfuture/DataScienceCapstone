@@ -6,6 +6,7 @@
 
 
 
+
 # This is the user-interface definition of a Shiny web application.
 # You can find out more about building applications with Shiny here:
 #
@@ -20,7 +21,30 @@ require(rCharts)
 library(pryr)
 library(lineprof)
 #options(RCHART_LIB = 'polycharts')
-
+#This is a function to remove the ability to use autocomplete an other capabilities.   This should be in
+#the shiny package instead.
+textInputNoCorrect <-
+        function (inputId, label, value = "", width = NULL, placeholder = NULL)
+        {
+                div(
+                        class = "form-group shiny-input-container", style = if (!is.null(width))
+                                paste0("width: ", validateCssUnit(width), ";"),
+                        
+                        tags$label(label, `for` = inputId), tags$input(
+                                id = inputId,
+                                type = "text", class = "form-control", value = value,
+                                autocomplete =
+                                        "off",
+                                autocorrect =
+                                        "off",
+                                autocapitalize =
+                                        "off" ,
+                                spellcheck =
+                                        "false" ,
+                                placeholder = placeholder
+                        )
+                )
+        }
 
 
 sidebar <-   dashboardSidebar(
@@ -58,14 +82,11 @@ body <-  dashboardBody(tabItems(
                 tabName = "predict",
                 fluidRow(
                         infoBoxOutput("memInfo",width = 3),
+                        infoBoxOutput("performanceInfo",width = 3),
+                        
                         infoBoxOutput("predictInfo",width = 3),
-                        infoBox(
-                                "Total Predictions", 15.3, subtitle = "Deviation",icon = icon("refresh"),color =
-                                        "yellow",width = 3
-                        ),
-                        infoBox(
-                                "Session Info", 1, subtitle = "Concurrent",icon = icon("refresh"),color = "green",width = 3
-                        )
+                        
+                        infoBoxOutput("sessionInfo",width = 3)
                         
                 ),
                 
@@ -74,20 +95,26 @@ body <-  dashboardBody(tabItems(
                         box(
                                 title = "Text Submission",
                                 
-                                column(6,textInput(
-                                        "textEntry",label = "Enter Text",width = "100%"
-                                )),
-                                column(2,actionButton("submitText","Predict!",icon = icon("star"))),
-                                color = "blue",width = 8
+                                textInputNoCorrect("textEntry",label = "Enter Text",width = "100%"),
+                                actionButton("submitText","Predict!",icon = icon("star")),
+                                color = "blue"
                         )
                         
                 ),
                 fluidRow(box(
-                        title = "Text Prediction",textOutput("textPredictionOut"),width = 12
+                        selectInput("wordSelection", "Word", c("Choose one" = "", c("test"))),
+                        title = "Text Prediction",textOutput("textPredictionOut"
+                                                             ),
+                        actionButton("wordIsSelected","Select Word",icon = icon("thumbs-up")),
+                        actionButton("wordIsRejected","Reject Words",icon = icon("thumbs-down")),
+                        helpText("Select the correct word by using the pull down menu once you have predicted the word. If you found the correct word,
+                                 then push the Select Word button.  If you can't find it, push the Reject Words button."),
+                        
+                        width = 12
                 )),
                 fluidRow(
                         box(
-                                title = "Prediciton Results",   DT::dataTableOutput("predictResults") ,width =
+                                title = "Prediction Results",   DT::dataTableOutput("predictResults") ,width =
                                         12
                         )
                 )

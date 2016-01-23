@@ -18,10 +18,10 @@ source("TextPredictor.R")
 #This is the data source
 container <- NGramContainer$new()
 container$restoreDataObject(dir ="./data/store2/")
-
+message("data read")
 messageData <-
         data.frame(
-                from = c("brett.r.taylor@me.com","wilfordtr@slhs.org"),message = c("Hey!","What?")
+                from = c("brett.r.taylor@me.com"),message = c("Hey!")
         )
 iconName <- function (isNgram) {
         if(isNgram) { 
@@ -39,7 +39,8 @@ colorName <- function (isNgram) {
         col
 }
 function(input, output,session) {
-       # print(session)
+        predictionValues <- reactiveValues(count = 0,success=0)
+        # print(session)
         predictor <- NGramPredictor$new(source=container) #This predictor is specific to the user
         autoInvalidate <- reactiveTimer(10000,session = session)
 
@@ -51,10 +52,9 @@ function(input, output,session) {
                                                    gramUsed = FALSE )
         outcomesUni <- reactiveValues(             
                                                    gramUsed = FALSE)
-        #This is a test
-        predictedWords <- reactive({
-                textEntered()
-        })
+ 
+        
+        predictedWords <- reactive({textEntered()})
         
         predictedWordResults <- reactive({
                 performanceValues$predict.time <- system.time({
@@ -90,42 +90,74 @@ function(input, output,session) {
                         outcomesUni$gramUsed <- TRUE
                         
                 }
-                        
                 data
+                
         })
         textEntered <- eventReactive(input$submitText, {
+                message("text Entered")
+                
+                predictionValues$count <-predictionValues$count + 1      
+                
                 input$textEntry
-        })
-        
-        
-        
-        
-        output$messageMenu <- renderMenu({
-                # Code to generate each of the messageItems here, in a list. This assumes
-                # that messageData is a data frame with two columns, 'from' and 'message'.
-                msgs <- apply(messageData, 1, function(row) {
-                        messageItem(from = row[["from"]], message = row[["message"]])
-                })
-                dropdownMenu(type = "messages", .list = msgs)
                 
         })
         
+        
+        wordSelected <- observeEvent(input$wordIsSelected, {
+                message("word selected")
+                
+              # 
+                input$wordSelection
+                
+        })
+        
+        wordRejected <- observeEvent(input$wordIsRejected, {
+                message("rejected")
+                
+                input$wordSelection
+                
+        })
+        
+         
   
         
         
         output$memInfo <- renderInfoBox({
+                message("mem info")
+                 
                 autoInvalidate()
                 infoBox(
                         "R Memory", humanReadable(mem_used(),standard = "SI"),
                         subtitle = "Delta",icon = icon("arrow-up"),color = "red" ,width = 3
                 )
         })
-        output$predictInfo <- renderInfoBox({
-     
+        output$performanceInfo <- renderInfoBox({
+                message("performance info")
                 infoBox(
                         "Performance", paste(
                                 round(performanceValues$predict.time["elapsed"],2), "sec"
                         ), subtitle = "Average",icon = icon("arrow-up"),color = "red" ,width = 3
+                )
+        })
+        output$predictInfo <- renderInfoBox({
+                message("predictInfo start")
+             #   predictionValues$success<-predictionValues$success + 1
+                message("predicatInfo next")
+                 infoBox(
+                        "Predictions", paste(
+                                predictionValues$count, 
+                                "Total"
+                        ), subtitle =  paste("Success:" ,
+                                             predictionValues$success
+                                             ),
+                                             icon = icon("arrow-right"),color = "yellow" ,width = 3
+                )
+        })
+        output$sessionInfo <- renderInfoBox({
+                
+                infoBox(
+                        "Information"
+                         , subtitle = "Average",icon = icon("arrow-up"),color = "red" ,width = 3
                 )
         })
          output$quadgram <-  renderInfoBox(  
@@ -162,11 +194,10 @@ function(input, output,session) {
         
         
         output$predictResults <- DT::renderDataTable({ 
-                message("got results")
-                
+                 
                 mydata  <- predictedWordResults()
                 message("mydata")
-                
+                updateSelectInput(session, "wordSelection", choices = mydata$word )
                 datatable(
                         mydata , extensions = c("ColReorder",'ColVis','Responsive'), options = list( 
                                 dom = 'RC<"clear">lfrtip',pageLength = 20, autoWidth = TRUE, 
