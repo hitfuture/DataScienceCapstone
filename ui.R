@@ -50,7 +50,9 @@ sidebar <-   dashboardSidebar(
                 
         ) ,
         
-        h2("Back off path"),
+       div(style= "margin: 10px;",
+           id="sideGrams" ,
+           h2("Back off path"),
         fluidRow(infoBoxOutput(outputId = "quadgram"))
         
         ,
@@ -66,7 +68,7 @@ sidebar <-   dashboardSidebar(
         fluidRow(infoBoxOutput(outputId = "unigram"))
         
         
-        
+ )       
 )
 
 body <-  dashboardBody(tabItems(
@@ -90,15 +92,15 @@ body <-  dashboardBody(tabItems(
                                 textInputNoCorrect("textEntry",label = "Enter Text",width = "100%"),
                                 actionButton("submitText","Predict!",icon = icon("star")),
                                 color = "blue"
-                        ),
-                        box("Help",tags$video(src="http://vimeo.com/12345?1")
+                        )
+                        #,box("Help",tags$video(tags$source(src="https://vimeo.com/user24457497/hitfuturenow?1")) )
 )
                         
-                ),
+                ,
                 fluidRow(box(
                         selectInput("wordSelection", "Word", c("Choose one" = "", c("test"))),
                         title = "Text Prediction",textOutput("textPredictionOut"
-                                                             ),
+        ),
                         actionButton("wordIsSelected","Select Word",icon = icon("thumbs-up")),
                         actionButton("wordIsRejected","Reject Words",icon = icon("thumbs-down")),
                         helpText("Select the correct word by using the pull down menu once you have predicted the word. If you found the correct word,
@@ -115,12 +117,12 @@ body <-  dashboardBody(tabItems(
         tabItem(tabName = "config",
                 
                 fluidRow(
-                        box(title = "Config Sessions",
+                        box(title = "Code",
                             textOutput("config1Out"), width = 12)
                 ),
                 fluidRow(
                         box(
-                                title = "Config Targets",plotOutput("plotStoreTransactions"), width = 12
+                                title = "Source Code",plotOutput("plotStoreTransactions"), width = 12
                         )
                         
                 )),

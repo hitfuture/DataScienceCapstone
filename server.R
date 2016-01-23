@@ -99,8 +99,7 @@ function(input, output,session) {
         })
         textEntered <- eventReactive(input$submitText, {
                 message("text Entered")
-                predictionValues$count <-predictionValues$count + 1  
-                input$textEntry
+                 input$textEntry
                 
         })
         #This is predicotr
@@ -110,7 +109,6 @@ function(input, output,session) {
         wordSelected <- observeEvent(input$wordIsSelected, {
                 message("word selected")
                 successRate$count <-successRate$count + 1
-              # 
                 input$wordSelection
                 
         })
