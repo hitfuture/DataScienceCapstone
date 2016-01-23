@@ -40,6 +40,10 @@ colorName <- function (isNgram) {
 }
 function(input, output,session) {
         predictionValues <- reactiveValues(count = 0,success=0)
+        successRate <- reactiveValues(count = 0,success=0)
+        failureRate <- reactiveValues(count = 0,success=0)
+        
+        
         # print(session)
         predictor <- NGramPredictor$new(source=container) #This predictor is specific to the user
         autoInvalidate <- reactiveTimer(10000,session = session)
@@ -95,17 +99,17 @@ function(input, output,session) {
         })
         textEntered <- eventReactive(input$submitText, {
                 message("text Entered")
-                
-                predictionValues$count <-predictionValues$count + 1      
-                
+                predictionValues$count <-predictionValues$count + 1  
                 input$textEntry
                 
         })
+        #This is predicotr
+        predictVal <- observeEvent(textEntered(),  predictionValues$count <-predictionValues$count + 1    ) 
         
         
         wordSelected <- observeEvent(input$wordIsSelected, {
                 message("word selected")
-                
+                successRate$count <-successRate$count + 1
               # 
                 input$wordSelection
                 
@@ -113,7 +117,7 @@ function(input, output,session) {
         
         wordRejected <- observeEvent(input$wordIsRejected, {
                 message("rejected")
-                
+                failureRate$count <- failureRate$count + 1
                 input$wordSelection
                 
         })
@@ -133,6 +137,7 @@ function(input, output,session) {
         })
         output$performanceInfo <- renderInfoBox({
                 message("performance info")
+                
                 infoBox(
                         "Performance", paste(
                                 round(performanceValues$predict.time["elapsed"],2), "sec"
@@ -148,7 +153,9 @@ function(input, output,session) {
                                 predictionValues$count, 
                                 "Total"
                         ), subtitle =  paste("Success:" ,
-                                             predictionValues$success
+                                             successRate$count,
+                                             "\nFailure:", failureRate$count
+                                             
                                              ),
                                              icon = icon("arrow-right"),color = "yellow" ,width = 3
                 )
@@ -196,8 +203,9 @@ function(input, output,session) {
         output$predictResults <- DT::renderDataTable({ 
                  
                 mydata  <- predictedWordResults()
+                str(mydata)
                 message("mydata")
-                updateSelectInput(session, "wordSelection", choices = mydata$word )
+                updateSelectInput(session, "wordSelection", choices = head(as.character(mydata$word),10) )
                 datatable(
                         mydata , extensions = c("ColReorder",'ColVis','Responsive'), options = list( 
                                 dom = 'RC<"clear">lfrtip',pageLength = 20, autoWidth = TRUE, 

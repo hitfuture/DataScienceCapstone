@@ -1,0 +1,31 @@
+Data Science Capstone: Text Analytics Wow!
+========================================================
+author: Brett R. Taylor
+date: January 22, 2016
+
+Project Objectives - What?
+========================================================
+
+Text Predictions 
+
+- Predict next word
+- Bullet 2
+- Bullet 3
+
+Why?
+========================================================
+
+```{r}
+summary(cars)
+```
+
+How? 
+========================================================
+
+```{r, echo=FALSE}
+plot(cars)
+```
+
+Reference Information
+==========================================================
+

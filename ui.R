@@ -1,12 +1,4 @@
 
-
-
-
-
-
-
-
-
 # This is the user-interface definition of a Shiny web application.
 # You can find out more about building applications with Shiny here:
 #
@@ -20,8 +12,8 @@ require(rCharts)
 
 library(pryr)
 library(lineprof)
-#options(RCHART_LIB = 'polycharts')
-#This is a function to remove the ability to use autocomplete an other capabilities.   This should be in
+ 
+#This is a function to remove the ability to use autocomplete and spell correction capabilities.   This should be in
 #the shiny package instead.
 textInputNoCorrect <-
         function (inputId, label, value = "", width = NULL, placeholder = NULL)
@@ -58,7 +50,7 @@ sidebar <-   dashboardSidebar(
                 
         ) ,
         
-        h2("Backout Path"),
+        h2("Back off path"),
         fluidRow(infoBoxOutput(outputId = "quadgram"))
         
         ,
@@ -98,7 +90,9 @@ body <-  dashboardBody(tabItems(
                                 textInputNoCorrect("textEntry",label = "Enter Text",width = "100%"),
                                 actionButton("submitText","Predict!",icon = icon("star")),
                                 color = "blue"
-                        )
+                        ),
+                        box("Help",tags$video(src="http://vimeo.com/12345?1")
+)
                         
                 ),
                 fluidRow(box(
@@ -108,9 +102,8 @@ body <-  dashboardBody(tabItems(
                         actionButton("wordIsSelected","Select Word",icon = icon("thumbs-up")),
                         actionButton("wordIsRejected","Reject Words",icon = icon("thumbs-down")),
                         helpText("Select the correct word by using the pull down menu once you have predicted the word. If you found the correct word,
-                                 then push the Select Word button.  If you can't find it, push the Reject Words button."),
+                                 then push the Select Word button.  If you can't find it, push the Reject Words button.")
                         
-                        width = 12
                 )),
                 fluidRow(
                         box(
